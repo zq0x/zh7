@@ -149,8 +149,8 @@ def get_network_info():
         
         res_container_list = client.containers.list(all=True)
         print(f'found {len(res_container_list)} containers!')
-        
-        for c in res_container_list:
+        res_container_list_attrs = [container.attrs for container in res_container_list]
+        for c in res_container_list_attrs:
             print('c')
             print(c)
             print('c["name"]')
