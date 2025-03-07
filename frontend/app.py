@@ -40,6 +40,15 @@ def load_log_file(req_container,req_amount):
         return f'{e}'
 
 
+def get_container_data():
+    try:
+        res_container_data_all = json.loads(r.get('db_container'))
+        print("res_container_data_all")
+        print(res_container_data_all)
+        return res_container_data_all
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+   
 def get_network_data():
     try:
         res_network_data_all = json.loads(r.get('db_network'))
@@ -328,6 +337,30 @@ def network_to_pd():
                 "bytes_recv_mb": f'0',
                 "rx_change_arr": f'0',
                 "timestamp": f'0'
+        })
+        df = pd.DataFrame(rows)
+        return df
+
+
+def container_to_pd():       
+    rows = []
+    try:
+        container_list = get_container_data()
+        print("container_list")
+        print(container_list)
+        logging.info(f'[container_to_pd] container_list: {container_list}')  # Use logging.info instead of logging.exception
+        for entry in container_list:
+            container_info = ast.literal_eval(entry['container_info'])  # Parse the string into a dictionary
+            rows.append({
+                "container_i": entry["container_i"]
+            })
+        df = pd.DataFrame(rows)
+        return df
+    
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        rows.append({
+                "network_i": "0"
         })
         df = pd.DataFrame(rows)
         return df

@@ -35,6 +35,65 @@ print(f'** pynvml found uuids: {device_uuids} ({len(device_uuids)})')
 
 
 
+def get_container_info():
+    container_info = []
+    try:        
+        res_container_list = client.containers.list(all=True)
+        print(f'** [get_container_info] {res_container_list} ({len(res_container_list)})')
+        for res_container_i in range(0,len(res_container_list)):
+            print("res_container_i")
+            print(res_container_i)
+            print("res_container_list[res_container_i]")
+            print(res_container_list[res_container_i])
+            container_info.append({
+                    "container_i": f'{res_container_i}',
+                    "container_info": f'{res_container_i}'
+            })
+        return container_info
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        return container_info
+
+
+async def redis_timer_container():
+    while True:
+        try:
+            current_container_info = get_container_info()
+            res_db_container = await r.get('db_container')
+            if res_db_container is not None:
+                db_container = json.loads(res_db_container)
+                updated_container_data = []
+                print(f' [container] 1 len(current_gpu_info): {len(current_container_info)}')
+                for container_i in range(0,len(current_container_info)):
+                    print(f' [container] gpu_i: {container_i}')
+                    update_data = {
+                        "container_i": container_i,
+                        "container_info": str(current_container_info[container_i]),
+                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    }
+                    updated_container_data.append(update_data)
+                    print(f'[container] 1 updated_container_data: {updated_container_data}')
+                await r.set('db_container', json.dumps(updated_container_data))
+            else:
+                updated_container_data = []
+                for container_i in range(0,len(current_container_info)):
+                    update_data = {
+                        "container_i": container_i,
+                        "container_info": str(current_container_info[container_i]),
+                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                    }
+                    updated_container_data.append(update_data)
+                    print(f'[container] 2 updated_container_data: {updated_container_data}')
+                await r.set('db_container', json.dumps(updated_container_data))
+            await asyncio.sleep(1.0)
+        except Exception as e:
+            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] Error: {e}')
+            await asyncio.sleep(1.0)
+
+
+
+
+
 prev_bytes_recv = 0
 rx_change_arr = []
 def get_network_info():
