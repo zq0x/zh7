@@ -147,24 +147,55 @@ def get_network_info():
         
         print(f'finding all containers ..')
         
+        
+        # Fetch all containers
         res_container_list = client.containers.list(all=True)
-        print(f'found {len(res_container_list)} containers!')
-        res_container_list_attrs = [container.attrs for container in res_container_list]
-        for c in res_container_list_attrs:
-            print('c')
-            print(c)
-            print('c["name"]')
-            print(c["name"])
-            
-            stats = c.stats(stream=False)
-            print('stats')
+        print(f'Found {len(res_container_list)} containers!')
+
+        network_info = []
+
+        # Iterate through each container
+        for container in res_container_list:
+            # Get container stats
+            stats = container.stats(stream=False)
+            print('Stats:')
             print(stats)
+            # Extract relevant information
+            container_name = container.name
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Append network information to the list
             network_info.append({
-                "container": f'{c["name"]}',
-                "info": f'network_info_blank', 
-                "current_dl": f'000000000000000',
-                "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                "container": container_name,
+                "info": "network_info_blank",  # Placeholder for actual network info
+                "current_dl": "000000000000000",  # Placeholder for actual download data
+                "timestamp": timestamp
             })
+            
+            # Print container name and stats
+            print(f'Container: {container_name}')
+
+
+        
+        
+        
+        # res_container_list = client.containers.list(all=True)
+        # print(f'found {len(res_container_list)} containers!')
+        # res_container_list_attrs = [container.attrs for container in res_container_list]
+        # for c in res_container_list_attrs:
+        #     print('c["name"]')
+        #     print()
+        #     # get container again lol
+        #     req_container = client.containers.get(c["name"])
+        #     stats = c.stats(stream=False)
+        #     print('stats')
+        #     print(stats)
+        #     network_info.append({
+        #         "container": f'{c["name"]}',
+        #         "info": f'network_info_blank', 
+        #         "current_dl": f'000000000000000',
+        #         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        #     })
             
         print(f'got all containers! printing final before responding ')
         print('network_info')
