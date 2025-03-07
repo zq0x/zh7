@@ -14,7 +14,26 @@ from contextlib import asynccontextmanager
 import pynvml
 import psutil
 
-r = redis.Redis(host="redis", port=6379, db=0)
+
+print(f'** connecting to redis on port: {os.getenv("REDIS_PORT")} ... ')
+r = redis.Redis(host="redis", port=int(os.getenv("REDIS_PORT", 6379)), db=0)
+
+print(f'** connecting to pynvml ... ')
+pynvml.nvmlInit()
+device_count = pynvml.nvmlDeviceGetCount()
+print(f'** pynvml found GPU: {device_count}')
+
+device_uuids = []
+for i in range(0,device_count):
+    print(f'1 i {i}')
+    handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+    print(f'1 handle {handle}')
+    current_uuid = pynvml.nvmlDeviceGetUUID(handle)
+    device_uuids.append(current_uuid)
+
+print(f'** pynvml found uuids: {device_uuids} ({len(device_uuids)})')
+
+
 
 prev_bytes_recv = 0
 rx_change_arr = []
@@ -24,31 +43,24 @@ def get_network_info():
         global prev_bytes_recv
         global rx_change_arr
         
-        print(f'[get_network_info] 1...')
         net_io = psutil.net_io_counters()
-        print(f'[get_network_info] 2...')
         current_bytes_recv = net_io.bytes_recv
-        print(f'[get_network_info] 3...')
         current_download_speed = current_bytes_recv - prev_bytes_recv
-        print(f'[get_network_info] 4...')
         prev_bytes_recv = current_bytes_recv
-        print(f'[get_network_info] 5...')
         current_download_speed_kb = current_download_speed / 1024
-        print(f'[get_network_info] 6...')
         current_download_speed_mbit_s = (current_download_speed * 8) / (1024 ** 2)    
-        print(f'[get_network_info] 7...')  
         current_bytes_recv_mb = current_bytes_recv / (1024 ** 2)
         # print(f'[get_network_info] 8... {rx_change_arr}')
         rx_change_arr.append(f'{current_download_speed_mbit_s:.2f}')
 
         rx_change_arr_str = ",".join(map(str, rx_change_arr[-3:]))
-        print(f'[get_network_info] 10 {rx_change_arr_str}...')
+
     
         network_info.append({
                 "dl_total_mb": f'{current_download_speed_mbit_s}',
                 "dl_total_kb": f'{current_download_speed_kb}',
                 "bytes_recv": f'{current_bytes_recv}',
-                "bytes_recv_mb": f'{current_bytes_recv_mb}',
+                "bytes_recv_mb": f'{current_bytes_recv_mb:.2f}',
                 "rx_change_arr": f'{rx_change_arr_str}'
         })
         print(f'[get_network_info] 11...')
