@@ -306,6 +306,8 @@ def gr_load_check(selected_model_id,selected_model_pipeline_tag,selected_model_t
     else:
         return gr.update(visible=True), gr.update(visible=False)
 
+
+
 def network_to_pd():       
     rows = []
     try:
@@ -316,13 +318,10 @@ def network_to_pd():
         for entry in network_list:
             network_info = ast.literal_eval(entry['network_info'])  # Parse the string into a dictionary
             rows.append({
-                "network_i": entry["network_i"],
-                "dl_total_mb": network_info["dl_total_mb"],
-                "dl_total_kb": network_info["dl_total_kb"],
-                "bytes_recv": network_info["bytes_recv"],
-                "bytes_recv_mb": network_info["bytes_recv_mb"],
-                "rx_change_arr": network_info["rx_change_arr"],
-                "timestamp": entry["timestamp"]
+                "container": entry["container"],
+                "current_dl": entry["current_dl"],
+                "timestamp": entry["timestamp"],
+                "info": entry["info"]
             })
         df = pd.DataFrame(rows)
         return df
@@ -330,13 +329,10 @@ def network_to_pd():
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         rows.append({
-                "network_i": "0",
-                "dl_total_mb": f'0',
-                "dl_total_kb": f'0',
-                "bytes_recv": f'0',
-                "bytes_recv_mb": f'0',
-                "rx_change_arr": f'0',
-                "timestamp": f'0'
+                "container": "0",
+                "current_dl": f'0',
+                "timestamp": f'0',
+                "info": f'0'
         })
         df = pd.DataFrame(rows)
         return df
@@ -747,13 +743,11 @@ with gr.Blocks() as app:
     timer_dl = gr.Timer(1,active=False)
     timer_dl.tick(get_download_speed, outputs=timer_dl_box)    
     
-    timer_dl2 = gr.Timer(1,active=False)
-    timer_dl2.tick(get_download_speed, outputs=timer_dl_box)
     
     timer_c = gr.Timer(1,active=False)
     timer_c.tick(refresh_container_list)
     
-    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.Timer(active=True), None, timer_dl2).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
+    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
     
     btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container_list, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.update(visible=True), None, timer_dl_box2).then(lambda: gr.update(visible=True), None, btn_interface)

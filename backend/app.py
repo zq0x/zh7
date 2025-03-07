@@ -31,100 +31,145 @@ for i in range(0,device_count):
     current_uuid = pynvml.nvmlDeviceGetUUID(handle)
     device_uuids.append(current_uuid)
 
-print(f'** pynvml found uuids: {device_uuids} ({len(device_uuids)})')
+print(f'** pynvml found uuids ({len(device_uuids)}): {device_uuids} ')
 
 
 
-def get_container_info():
-    container_info = []
-    try:        
-        res_container_list = client.containers.list(all=True)
-        print(f'** [get_container_info] {res_container_list} ({len(res_container_list)})')
-        for res_container_i in range(0,len(res_container_list)):
-            print("res_container_i")
-            print(res_container_i)
-            print("res_container_list[res_container_i]")
-            print(res_container_list[res_container_i])
-            container_info.append({
-                    "container_i": f'{res_container_i}',
-                    "container_info": f'{res_container_i}'
-            })
-        return container_info
+# def get_vllm_info():
+#     container_info = []
+#     try:        
+#         res_container_list = client.containers.list(all=True)
+#         print(f'** [get_container_info] {res_container_list} ({len(res_container_list)})')
+#         for res_container_i in range(0,len(res_container_list)):
+#             print("res_container_i")
+#             print(res_container_i)
+#             print("res_container_list[res_container_i]")
+#             print(res_container_list[res_container_i])
+#             container_info.append({
+#                     "container_i": f'{res_container_i}',
+#                     "container_info": f'{res_container_i}'
+#             })
+#         return container_info
+#     except Exception as e:
+#         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+#         return container_info
+
+
+# async def redis_timer_vllm():
+#     while True:
+#         try:
+#             current_container_info = get_container_info()
+#             res_db_container = await r.get('db_container')
+#             if res_db_container is not None:
+#                 db_container = json.loads(res_db_container)
+#                 updated_container_data = []
+#                 print(f' [container] 1 len(current_gpu_info): {len(current_container_info)}')
+#                 for container_i in range(0,len(current_container_info)):
+#                     print(f' [container] gpu_i: {container_i}')
+#                     update_data = {
+#                         "container_i": container_i,
+#                         "container_info": str(current_container_info[container_i]),
+#                         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+#                     }
+#                     updated_container_data.append(update_data)
+#                     print(f'[container] 1 updated_container_data: {updated_container_data}')
+#                 await r.set('db_container', json.dumps(updated_container_data))
+#             else:
+#                 updated_container_data = []
+#                 for container_i in range(0,len(current_container_info)):
+#                     update_data = {
+#                         "container_i": container_i,
+#                         "container_info": str(current_container_info[container_i]),
+#                         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+#                     }
+#                     updated_container_data.append(update_data)
+#                     print(f'[container] 2 updated_container_data: {updated_container_data}')
+#                 await r.set('db_container', json.dumps(updated_container_data))
+#             await asyncio.sleep(1.0)
+#         except Exception as e:
+#             print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] Error: {e}')
+#             await asyncio.sleep(1.0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rx_change_arr = []
+prev_bytes_recv = 0
+def get_download_speed():
+    try:
+        global prev_bytes_recv
+        global rx_change_arr
+        
+        print(f'trying to get download speed ...')
+        net_io = psutil.net_io_counters()
+        bytes_recv = net_io.bytes_recv
+        download_speed = bytes_recv - prev_bytes_recv
+        prev_bytes_recv = bytes_recv
+        download_speed_kb = download_speed / 1024
+        download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)      
+        bytes_received_mb = bytes_recv
+        rx_change_arr.append(rx_change_arr)
+        return f'{download_speed_mbit_s:.2f} MBit/s (total: {bytes_received_mb})'
+        # return f'{download_speed_kb:.2f} KB/s (total: {bytes_received_mb:.2f})'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return container_info
-
-
-async def redis_timer_container():
-    while True:
-        try:
-            current_container_info = get_container_info()
-            res_db_container = await r.get('db_container')
-            if res_db_container is not None:
-                db_container = json.loads(res_db_container)
-                updated_container_data = []
-                print(f' [container] 1 len(current_gpu_info): {len(current_container_info)}')
-                for container_i in range(0,len(current_container_info)):
-                    print(f' [container] gpu_i: {container_i}')
-                    update_data = {
-                        "container_i": container_i,
-                        "container_info": str(current_container_info[container_i]),
-                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                    }
-                    updated_container_data.append(update_data)
-                    print(f'[container] 1 updated_container_data: {updated_container_data}')
-                await r.set('db_container', json.dumps(updated_container_data))
-            else:
-                updated_container_data = []
-                for container_i in range(0,len(current_container_info)):
-                    update_data = {
-                        "container_i": container_i,
-                        "container_info": str(current_container_info[container_i]),
-                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                    }
-                    updated_container_data.append(update_data)
-                    print(f'[container] 2 updated_container_data: {updated_container_data}')
-                await r.set('db_container', json.dumps(updated_container_data))
-            await asyncio.sleep(1.0)
-        except Exception as e:
-            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] Error: {e}')
-            await asyncio.sleep(1.0)
+        return f'download error: {e}'
 
 
 
 
 
 prev_bytes_recv = 0
-rx_change_arr = []
+
 def get_network_info():
     network_info = []
-    try:        
-        global prev_bytes_recv
-        global rx_change_arr
-        
-        net_io = psutil.net_io_counters()
-        current_bytes_recv = net_io.bytes_recv
-        current_download_speed = current_bytes_recv - prev_bytes_recv
-        prev_bytes_recv = current_bytes_recv
-        current_download_speed_kb = current_download_speed / 1024
-        current_download_speed_mbit_s = (current_download_speed * 8) / (1024 ** 2)    
-        current_bytes_recv_mb = current_bytes_recv / (1024 ** 2)
-        # print(f'[get_network_info] 8... {rx_change_arr}')
-        rx_change_arr.append(f'{current_download_speed_mbit_s:.2f}')
-
-        rx_change_arr_str = ",".join(map(str, rx_change_arr[-3:]))
-
-    
+    try: 
+            
+        current_total_dl = get_download_speed()
         network_info.append({
-                "dl_total_mb": f'{current_download_speed_mbit_s}',
-                "dl_total_kb": f'{current_download_speed_kb}',
-                "bytes_recv": f'{current_bytes_recv}',
-                "bytes_recv_mb": f'{current_bytes_recv_mb:.2f}',
-                "rx_change_arr": f'{rx_change_arr_str}'
+            "container": f'all',
+            "info": f'network_info_blank',            
+            "current_dl": f'{current_total_dl}',
+            "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         })
-        print(f'[get_network_info] 11...')
+        
+        print(f'finding all containers ..')
+        
+        res_container_list = client.containers.list(all=True)
+        print(f'found {len(res_container_list)} containers!')
+        
+        for c in res_container_list:
+            print('c')
+            print(c)
+            print('c["name"]')
+            print(c["name"])
+            
+            stats = c.stats(stream=False)
+            print('stats')
+            print(stats)
+            network_info.append({
+                "container": f'{c["name"]}',
+                "info": f'network_info_blank', 
+                "current_dl": f'000000000000000',
+                "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            })
+            
+        print(f'got all containers! printing final before responding ')
+        print('network_info')
+        print(network_info)           
         return network_info
-        # return f'{download_speed_kb:.2f} KB/s (total: {bytes_recv_mb:.2f})'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return network_info
@@ -138,23 +183,25 @@ async def redis_timer_network():
                 db_network = json.loads(res_db_network)
                 updated_network_data = []
                 print(f' [network] 1 len(current_gpu_info): {len(current_network_info)}')
-                for network_i in range(0,len(current_network_info)):
-                    print(f' [network] gpu_i: {network_i}')
+                for net_info_obj in current_network_info:
+                    print(f' [network] net_info_obj: {net_info_obj}')
                     update_data = {
-                        "network_i": network_i,
-                        "network_info": str(current_network_info[network_i]),
-                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                        "container": str(net_info_obj["container"]),
+                        "info": str(net_info_obj["container"]),
+                        "current_dl": str(net_info_obj["current_dl"]),
+                        "timestamp": str(net_info_obj["timestamp"]),
                     }
                     updated_network_data.append(update_data)
                     print(f'[network] 1 updated_network_data: {updated_network_data}')
                 await r.set('db_network', json.dumps(updated_network_data))
             else:
                 updated_network_data = []
-                for network_i in range(0,len(current_network_info)):
+                for net_info_obj in current_network_info:
                     update_data = {
-                        "network_i": network_i,
-                        "network_info": str(current_network_info[network_i]),
-                        "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                        "container": str(net_info_obj["container"]),
+                        "info": str(net_info_obj["container"]),
+                        "current_dl": str(net_info_obj["current_dl"]),
+                        "timestamp": str(net_info_obj["timestamp"]),
                     }
                     updated_network_data.append(update_data)
                     print(f'[network] 2 updated_network_data: {updated_network_data}')
