@@ -16,8 +16,8 @@ import psutil
 
 
 
-BASE_CONTAINER_STATS = {
-    'name': '/dummy_container',
+FALLBACK_CONTAINER_STATS = {
+    'name': '/error_container',
     'id': '0000000000000000000000000000000000000000000000000000000000000000',
     'read': '2025-01-01T00:00:00.000000000Z',
     'preread': '2025-01-01T00:00:00.000000000Z',
@@ -391,22 +391,70 @@ def get_gpu_info():
         for i in range(0,device_count):
             print(f'hm ok i: {i}')
             handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            current_uuid = pynvml.nvmlDeviceGetUUID(handle)
+            
+            res_current_uuid = pynvml.nvmlDeviceGetUUID(handle)
+            
+            
+            
+            
+        
             print(f'hm ok current_uuid: {current_uuid}')
+            
             utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-            gpu_util = utilization.gpu
-            memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            mem_used = memory_info.used / 1024**2
-            mem_total = memory_info.total / 1024**2
-            mem_util = (mem_used / mem_total) * 100
+            # mem_util = f'{(mem_used / mem_total) * 100} %'
+            res_gpu_util = f'{utilization.gpu}%'
+            res_mem_util = f'{utilization.memory}%'
 
+            
+            mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            res_mem_total = f'{mem_info.total / 1024 ** 2:.2f} MB'
+            res_mem_used = f'{mem_info.used / 1024 ** 2:.2f} MB'            
+            res_mem_free = f'{mem_info.free / 1024 ** 2:.2f} MB'
+            
+            
+            # Get GPU temperature
+            temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+            res_temperature = f'{temperature}°C'
+
+            # Get GPU fan speed
+            fan_speed = pynvml.nvmlDeviceGetFanSpeed(handle)
+            res_fan_speed = f'{fan_speed}%'
+
+            # Get GPU power usage
+            power_usage = pynvml.nvmlDeviceGetPowerUsage(handle)
+            res_power_usage = f'{power_usage / 1000:.2f} W'            
+        
+            # Get GPU clock speeds
+            clock_info_graphics = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
+            res_clock_info_graphics = f'{clock_info_graphics} MHz'
+            
+            clock_info_mem = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_MEM)
+            res_clock_info_mem = f'{clock_info_mem} MHz'
+            
+            # Get GPU compute capability (compute_capability)
+            cuda_cores = pynvml.nvmlDeviceGetNumGpuCores(handle)
+            res_cuda_cores = f'{cuda_cores}'
+
+            # Get GPU compute capability (CUDA cores)
+            compute_capability = pynvml.nvmlDeviceGetCudaComputeCapability(handle)
+            compute_capability_float = f'{compute_capability[0]}.{compute_capability[1]}'
+            res_compute_capability = f'{compute_capability_float}'
+            
             gpu_info.append({
-                    "gpu_i": i,
-                    "current_uuid": current_uuid,
-                    "gpu_util": float(gpu_util),
-                    "mem_used": float(mem_used),
-                    "mem_total": float(mem_total),
-                    "mem_util": float(mem_util)
+                "gpu_i": i,
+                "current_uuid": res_current_uuid,
+                "gpu_util": res_gpu_util,
+                "mem_util": res_mem_util,
+                "mem_total": res_mem_total,
+                "mem_used": res_mem_used,
+                "mem_free": res_mem_free,
+                "temperature": res_temperature,
+                "fan_speed": res_fan_speed,
+                "power_usage": res_power_usage,
+                "clock_info_graphics": res_clock_info_graphics,
+                "clock_info_mem": res_clock_info_mem,
+                "cuda_cores": res_cuda_cores,
+                "compute_capability": res_compute_capability
             })
         print("gpu_info")
         print(gpu_info) 
