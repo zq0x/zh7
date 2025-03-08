@@ -437,11 +437,11 @@ def get_gpu_info():
 
             # Get GPU compute capability (CUDA cores)
             compute_capability = pynvml.nvmlDeviceGetCudaComputeCapability(handle)
-            compute_capability_float = f'{compute_capability[0]}.{compute_capability[1]}'
-            res_compute_capability = f'{compute_capability_float}'
+            compute_capability_str = f'{compute_capability[0]}.{compute_capability[1]}'
+            res_compute_capability = f'{compute_capability_str}'
             res_supported = []
             res_not_supported = []
-            if res_compute_capability >= 8:
+            if float(res_compute_capability) >= 8:
                 res_supported.append('Bfloat16')
             else:
                 res_not_supported.append('Bfloat16')
