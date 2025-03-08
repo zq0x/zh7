@@ -316,7 +316,7 @@ def network_to_pd():
         print(network_list)
         logging.info(f'[network_to_pd] network_list: {network_list}')  # Use logging.info instead of logging.exception
         for entry in network_list:
-            network_info = ast.literal_eval(entry['network_info'])  # Parse the string into a dictionary
+            # network_info = ast.literal_eval(entry['network_info'])  # Parse the string into a dictionary
             rows.append({
                 "container": entry["container"],
                 "current_dl": entry["current_dl"],
