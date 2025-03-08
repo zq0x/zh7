@@ -433,7 +433,7 @@ def download_from_hf_hub(selected_model_id):
             repo_id=selected_model_id,
             local_dir=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'
         )
-        return f'download result: {model_path}'
+        return f'Download of {selected_model_id} done! saved in {model_path}'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return f'download error: {e}'
@@ -485,10 +485,30 @@ def get_download_speed():
         return f'download error: {e}'
 
 
+VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
+
+            
+def vllm_api(req_type="generate", prompt="tell me a chuck norris joke please", max_tokens=150, temperature=0.7):
+    try:
+        response = requests.post(VLLM_URL, json={
+            "req_type": req_type,
+            "prompt": prompt,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        })
+        print("response")
+        print(response)
+        return f'{response}'
+    except Exception as e:
+        logging.exception(f'Exception occured: {e}', exc_info=True)
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        return e
 
 
 
-BACKEND_URL = f'http://container_backend:{str(int(os.getenv("CONTAINER_PORT"))+1)}/dockerrest'
+
+
+BACKEND_URL = f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest'
 
 def docker_api(req_type,req_model=None,req_task=None,req_prompt=None,req_temperature=None, req_config=None):
     
@@ -593,6 +613,18 @@ with gr.Blocks() as app:
             print(f'selected_model_id_arr {selected_model_id_arr}...')            
             gr.Interface.from_pipeline(pipeline(text_pipeline, model=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'))
 
+
+
+    max_tokens = gr.Number(label="max_tokens", visible=True)
+    temperature = gr.Number(label="temperature", visible=True)
+    
+    prompt_in = gr.Textbox(placeholder="Ask a question", label="Query", show_label=True, visible=True)  
+    prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
+    prompt_btn = gr.Button("Submit", visible=True)
+    prompt_btn.click(lambda: gr.update(label="Querying ..."), None, prompt_out).then(lambda: vllm_api("generate", prompt_in), inputs=[prompt_in], outputs=prompt_out)
+    
+    
+    
     gpu_dataframe = gr.Dataframe(label="GPU information")
     gpu_timer = gr.Timer(1,active=True)
     gpu_timer.tick(gpu_to_pd, outputs=gpu_dataframe)
