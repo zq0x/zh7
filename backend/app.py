@@ -247,20 +247,61 @@ def get_network_info():
             "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         })
         
+        
         print(f'finding all containers ..')
         res_container_list = client.containers.list(all=True)
+        
         print(f'Found {len(res_container_list)} containers!')
 
+        # Iterate through each container
         for container in res_container_list:
+            # Get container stats
             container_stats = container.stats(stream=False)
-            print(f'container_stats {container_stats}')
-            print(f'container_stats["info"] {container_stats["info"]}')
+            
+            # Extract network information (rx_bytes)
+            networks = container_stats.get('networks', {})
+            rx_bytes = 0  # Default value if no network data is found
+            if networks:
+                # Sum rx_bytes across all network interfaces (e.g., eth0, eth1, etc.)
+                rx_bytes = sum(network.get('rx_bytes', 0) for network in networks.values())
+            
+            # Append network information to the list
             network_info.append({
                 "container": container.name,
-                "info": "infoblabalba", 
-                "current_dl": "1337",
-                "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                "info": "infoblabalba",  # Placeholder for additional info
+                "current_dl": str(rx_bytes),  # Use the actual rx_bytes value
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
+            
+            # Print container stats for debugging
+            print(f'Container: {container.name}')
+            print(f'Stats: {container_stats}')
+            print(f'Network Info: {networks}')
+            print(f'RX Bytes: {rx_bytes}')
+            print()
+
+        # Now `network_info` contains the network information for all containers
+        print('Network Info:')
+        print(network_info)
+
+
+        
+        # print(f'Found {len(res_container_list)} containers!')
+        # rx_bytes = sum(network.get('rx_bytes', 0) for network in networks.values())
+
+
+        # for container in res_container_list:
+        #     container_stats = container.stats(stream=False)
+        #     print(f'container_stats {container_stats}')
+        #     print(f'container_stats["info"] {container_stats["info"]}')
+            
+        #     rx_bytes = sum(network.get('rx_bytes', 0) for network in networks.values())
+        #     network_info.append({
+        #         "container": container.name,
+        #         "info": "infoblabalba", 
+        #         "current_dl": "1337",
+        #         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        #     })
             
 
 
@@ -285,9 +326,7 @@ def get_network_info():
         #         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         #     })
             
-        print(f'got all containers! printing final before responding ({len(network_info)}) ')
-        print('network_info')
-        print(network_info)           
+        print(f'got all containers! printing final before responding ({len(network_info)}) ')        
         return network_info
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
