@@ -242,7 +242,7 @@ def get_network_info():
         current_total_dl = get_download_speed()
         network_info.append({
             "container": f'all',
-            "info": BASE_CONTAINER_STATS,            
+            "info": "infoblabalba",            
             "current_dl": f'{current_total_dl}',
             "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         })
@@ -252,10 +252,13 @@ def get_network_info():
         print(f'Found {len(res_container_list)} containers!')
 
         for container in res_container_list:
+            container_stats = container.stats(stream=False)
+            print(f'container_stats {container_stats}')
+            print(f'container_stats["info"] {container_stats["info"]}')
             network_info.append({
                 "container": container.name,
-                "info": container.stats(stream=False),
-                "current_dl": "000000000000000",
+                "info": "infoblabalba", 
+                "current_dl": "1337",
                 "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             })
             
@@ -290,6 +293,16 @@ def get_network_info():
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return network_info
 
+
+    # gpu_info.append({
+    #         "gpu_i": i,
+    #         "current_uuid": current_uuid,
+    #         "gpu_util": float(gpu_util),
+    #         "mem_used": float(mem_used),
+    #         "mem_total": float(mem_total),
+    #         "mem_util": float(mem_util)
+    # })
+    
 async def redis_timer_network():
     while True:
         try:
@@ -303,7 +316,7 @@ async def redis_timer_network():
                     print(f' [network] net_info_obj: {net_info_obj}')
                     update_data = {
                         "container": str(net_info_obj["container"]),
-                        "info": str(net_info_obj["container"]),
+                        "info": str(net_info_obj["info"]),
                         "current_dl": str(net_info_obj["current_dl"]),
                         "timestamp": str(net_info_obj["timestamp"]),
                     }
@@ -315,7 +328,7 @@ async def redis_timer_network():
                 for net_info_obj in current_network_info:
                     update_data = {
                         "container": str(net_info_obj["container"]),
-                        "info": str(net_info_obj["container"]),
+                        "info": str(net_info_obj["info"]),
                         "current_dl": str(net_info_obj["current_dl"]),
                         "timestamp": str(net_info_obj["timestamp"]),
                     }

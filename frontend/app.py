@@ -315,31 +315,31 @@ def network_to_pd():
         print(network_list)
         logging.info(f'[network_to_pd] network_list: {network_list}')  # Use logging.info instead of logging.exception
         for entry in network_list:
-            entry_info = ast.literal_eval(entry['info'])  # Parse the string into a dictionary
-            print("entry_info")
-            print(entry_info)
-            entry_info_networks = entry_info.get("networks", {})
-            print("entry_info_networks")
-            print(entry_info_networks)            
-            first_network_key = next(iter(entry_info_networks))
-            print("first_network_key")
-            print(first_network_key)     
+            # entry_info = ast.literal_eval(entry['info'])  # Parse the string into a dictionary
+            # print("entry_info")
+            # print(entry_info)
+            # entry_info_networks = entry_info.get("networks", {})
+            # print("entry_info_networks")
+            # print(entry_info_networks)            
+            # first_network_key = next(iter(entry_info_networks))
+            # print("first_network_key")
+            # print(first_network_key)                 
+            # first_network_data = entry_info_networks[first_network_key]
+            # print("first_network_data")
+            # print(first_network_data)                          
+            # first_network_data_rx_bytes = first_network_data["rx_bytes"]
+            # print("first_network_data_rx_bytes")
+            # print(first_network_data_rx_bytes)              
+            # print(f"First network data: {first_network_data}")
             
-            first_network_data = entry_info_networks[first_network_key]
-            print("first_network_data")
-            print(first_network_data)  
-                        
-            first_network_data_rx_bytes = first_network_data["rx_bytes"]
-            print("first_network_data_rx_bytes")
-            print(first_network_data_rx_bytes)  
-            
-            print(f"First network data: {first_network_data}")
             rows.append({
                 "container": entry["container"],
                 "current_dl": entry["current_dl"],
                 "timestamp": entry["timestamp"],
-                "rx_bytes": f'{first_network_data_rx_bytes}',
+                "info": entry["info"]
             })
+            
+            
         df = pd.DataFrame(rows)
         return df
     
