@@ -439,12 +439,23 @@ def get_gpu_info():
             compute_capability = pynvml.nvmlDeviceGetCudaComputeCapability(handle)
             compute_capability_float = f'{compute_capability[0]}.{compute_capability[1]}'
             res_compute_capability = f'{compute_capability_float}'
+            res_supported = []
+            res_not_supported = []
+            if res_compute_capability >= 8:
+                res_supported.append('Bfloat16')
+            else:
+                res_not_supported.append('Bfloat16')
+            
+            res_supported_str = ",".join(res_supported)
+            res_not_supported_str = ",".join(res_not_supported)
             
             gpu_info.append({
                 "gpu_i": i,
                 "current_uuid": res_current_uuid,
                 "gpu_util": res_gpu_util,
                 "mem_util": res_mem_util,
+                "supported": res_supported_str,
+                "not_supported": res_not_supported_str,
                 "mem_total": res_mem_total,
                 "mem_used": res_mem_used,
                 "mem_free": res_mem_free,

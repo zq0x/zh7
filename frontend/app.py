@@ -396,6 +396,8 @@ def gpu_to_pd():
                 "gpu_i": entry.get("gpu_i", "0"),
                 "gpu_util": gpu_info.get("gpu_util", "0"),
                 "mem_util": gpu_info.get("mem_util", "0"),
+                "supported": gpu_info.get("supported", "0"),
+                "not_supported": gpu_info.get("not_supported", "0"),
                 "mem_total": gpu_info.get("mem_total", "0"),
                 "mem_used": gpu_info.get("mem_used", "0"),
                 "mem_free": gpu_info.get("mem_free", "0"),
