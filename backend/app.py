@@ -218,7 +218,7 @@ def get_download_speed():
         net_io = psutil.net_io_counters()
         bytes_recv = net_io.bytes_recv
         download_speed = bytes_recv - prev_bytes_recv
-        prev_bytes_recv = bytes_recv.copy()
+        prev_bytes_recv = bytes_recv
         download_speed_kb = download_speed / 1024
         download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)      
         bytes_received_mb = bytes_recv
