@@ -15,6 +15,110 @@ import pynvml
 import psutil
 
 
+
+BASE_CONTAINER_STATS = {
+    'name': '/dummy_container',
+    'id': '0000000000000000000000000000000000000000000000000000000000000000',
+    'read': '2025-01-01T00:00:00.000000000Z',
+    'preread': '2025-01-01T00:00:00.000000000Z',
+    'pids_stats': {
+        'current': 0,
+        'limit': 0
+    },
+    'blkio_stats': {
+        'io_service_bytes_recursive': None,
+        'io_serviced_recursive': None,
+        'io_queue_recursive': None,
+        'io_service_time_recursive': None,
+        'io_wait_time_recursive': None,
+        'io_merged_recursive': None,
+        'io_time_recursive': None,
+        'sectors_recursive': None
+    },
+    'num_procs': 0,
+    'storage_stats': {},
+    'cpu_stats': {
+        'cpu_usage': {
+            'total_usage': 0,
+            'usage_in_kernelmode': 0,
+            'usage_in_usermode': 0
+        },
+        'system_cpu_usage': 0,
+        'online_cpus': 0,
+        'throttling_data': {
+            'periods': 0,
+            'throttled_periods': 0,
+            'throttled_time': 0
+        }
+    },
+    'precpu_stats': {
+        'cpu_usage': {
+            'total_usage': 0,
+            'usage_in_kernelmode': 0,
+            'usage_in_usermode': 0
+        },
+        'system_cpu_usage': 0,
+        'online_cpus': 0,
+        'throttling_data': {
+            'periods': 0,
+            'throttled_periods': 0,
+            'throttled_time': 0
+        }
+    },
+    'memory_stats': {
+        'usage': 0,
+        'stats': {
+            'active_anon': 0,
+            'active_file': 0,
+            'anon': 0,
+            'anon_thp': 0,
+            'file': 0,
+            'file_dirty': 0,
+            'file_mapped': 0,
+            'file_writeback': 0,
+            'inactive_anon': 0,
+            'inactive_file': 0,
+            'kernel_stack': 0,
+            'pgactivate': 0,
+            'pgdeactivate': 0,
+            'pgfault': 0,
+            'pglazyfree': 0,
+            'pglazyfreed': 0,
+            'pgmajfault': 0,
+            'pgrefill': 0,
+            'pgscan': 0,
+            'pgsteal': 0,
+            'shmem': 0,
+            'slab': 0,
+            'slab_reclaimable': 0,
+            'slab_unreclaimable': 0,
+            'sock': 0,
+            'thp_collapse_alloc': 0,
+            'thp_fault_alloc': 0,
+            'unevictable': 0,
+            'workingset_activate': 0,
+            'workingset_nodereclaim': 0,
+            'workingset_refault': 0
+        },
+        'limit': 0
+    },
+    'networks': {
+        'eth0': {
+            'rx_bytes': 0,
+            'rx_packets': 0,
+            'rx_errors': 0,
+            'rx_dropped': 0,
+            'tx_bytes': 0,
+            'tx_packets': 0,
+            'tx_errors': 0,
+            'tx_dropped': 0
+        }
+    }
+}
+
+
+
+
 print(f'** connecting to redis on port: {os.getenv("REDIS_PORT")} ... ')
 r = redis.Redis(host="redis", port=int(os.getenv("REDIS_PORT", 6379)), db=0)
 
@@ -140,40 +244,23 @@ def get_network_info():
         current_total_dl = get_download_speed()
         network_info.append({
             "container": f'all',
-            "info": f'network_info_blank',            
+            "info": BASE_CONTAINER_STATS,            
             "current_dl": f'{current_total_dl}',
             "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         })
         
         print(f'finding all containers ..')
-        
-        
-        # Fetch all containers
         res_container_list = client.containers.list(all=True)
         print(f'Found {len(res_container_list)} containers!')
 
-        network_info = []
-
-        # Iterate through each container
         for container in res_container_list:
-            # Get container stats
-            stats = container.stats(stream=False)
-            print('Stats:')
-            print(stats)
-            # Extract relevant information
-            container_name = container.name
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            # Append network information to the list
             network_info.append({
-                "container": container_name,
-                "info": "network_info_blank",  # Placeholder for actual network info
-                "current_dl": "000000000000000",  # Placeholder for actual download data
-                "timestamp": timestamp
+                "container": container.name,
+                "info": container.stats(stream=False),
+                "current_dl": "000000000000000",
+                "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             })
             
-            # Print container name and stats
-            print(f'Container: {container_name}')
 
 
         
@@ -197,7 +284,7 @@ def get_network_info():
         #         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         #     })
             
-        print(f'got all containers! printing final before responding ')
+        print(f'got all containers! printing final before responding ({len(network_info)}) ')
         print('network_info')
         print(network_info)           
         return network_info
