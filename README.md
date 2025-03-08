@@ -5,6 +5,7 @@ Gradio Frontend using vLLM to download and deploy Hugging Face models. CRUD REST
 ### Installation
 
 **Prerequisite**: A GPU which supports CUDA 12.4
+**Prerequisite**: Some models require a minimum Bfloat16
 
 To install the containers run the docker compose file:
 
