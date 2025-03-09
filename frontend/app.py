@@ -487,22 +487,33 @@ def get_download_speed():
 
 VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
 
-            
-def vllm_api(req_type="generate", prompt="tell me a chuck norris joke please", max_tokens=150, temperature=0.7):
+def vllm_api(request: gr.Request):
     try:
-        response = requests.post(VLLM_URL, json={
-            "req_type": req_type,
-            "prompt": prompt,
-            "max_tokens": max_tokens,
-            "temperature": temperature
-        })
+        response = "if you see this it didnt work :/"
+        if request:
+            print("Request headers dictionary:", request.headers)
+            print("IP address:", request.client.host)
+            print("Query parameters:", dict(request.query_params))
+            print("Session hash:", request.session_hash)            
+            
+            # if request.
+            
+            response = requests.post(VLLM_URL, json={
+                "req_type":"generate",
+                "prompt":"tell me a chuck norris joke about frontend",
+                "temperature":0.7,
+                "top_p":0.95,
+                "max_tokens":150
+            })
+
+            
         print("response")
         print(response)
         return f'{response}'
     except Exception as e:
         logging.exception(f'Exception occured: {e}', exc_info=True)
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return e
+        return f'{e}'
 
 
 
