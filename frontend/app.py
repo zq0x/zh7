@@ -24,7 +24,7 @@ db_gpu_data_len = ''
 try:
     r = redis.Redis(host="redis", port=6379, db=0)
     db_gpu = json.loads(r.get('db_gpu'))
-    print(f'db_gpu: {db_gpu} {len(db_gpu)}')
+    # print(f'db_gpu: {db_gpu} {len(db_gpu)}')
     db_gpu_data_len = len(db_gpu_data)
 except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -352,9 +352,9 @@ def container_to_pd():
     rows = []
     try:
         container_list = get_container_data()
-        print("container_list")
-        print(container_list)
-        logging.info(f'[container_to_pd] container_list: {container_list}')  # Use logging.info instead of logging.exception
+        # print("container_list")
+        # print(container_list)
+        # logging.info(f'[container_to_pd] container_list: {container_list}')  # Use logging.info instead of logging.exception
         for entry in container_list:
             container_info = ast.literal_eval(entry['container_info'])  # Parse the string into a dictionary
             rows.append({
@@ -379,7 +379,7 @@ def gpu_to_pd():
     rows = []
     try:
         gpu_list = get_gpu_data()
-        logging.info(f'[gpu_to_pd] gpu_list: {gpu_list}')  # Use logging.info instead of logging.exception
+        # logging.info(f'[gpu_to_pd] gpu_list: {gpu_list}')  # Use logging.info instead of logging.exception
         for entry in gpu_list:
             gpu_info = ast.literal_eval(entry['gpu_info'])  # Parse the string into a dictionary
             rows.append({                
@@ -501,8 +501,13 @@ def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
                 "top_p":0.95,
                 "max_tokens":max_tokens
             })
-
-            
+            if response.status_code == 200:
+                logging.info(f'[vllm_api] status_code: {response.status_code}') 
+                response_json = response.json()
+                logging.info(f'[vllm_api] response_json: {response_json}') 
+                return response_json["result_data"]                
+        
+        logging.info(f'[vllm_api] response: {response}') 
         print("response")
         print(response)
         return f'{response}'
