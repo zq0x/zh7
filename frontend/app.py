@@ -480,10 +480,11 @@ VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
 # def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
 def vllm_api(
                 req_type,
+                model=None,
+                pipeline_tag=None,
                 max_model_len=None,
                 tensor_parallel_size=None,
                 gpu_memory_utilization=None,
-                model=None,
                 top_p=None,
                 temperature=None,
                 max_tokens=None,
@@ -493,15 +494,17 @@ def vllm_api(
     try:
 
         FALLBACK_VLLM_API = {}
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{max_model_len}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{tensor_parallel_size}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{gpu_memory_utilization}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{model}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{top_p}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{temperature}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{max_tokens}]')
-        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{prompt_in}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] req_type: {req_type}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] model: {model}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] pipeline_tag: {pipeline_tag}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] max_model_len: {max_model_len}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] tensor_parallel_size: {tensor_parallel_size}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] gpu_memory_utilization: {gpu_memory_utilization}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] top_p: {top_p}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] temperature: {temperature}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] max_tokens: {max_tokens}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] prompt_in: {prompt_in}')
+
         if req_type == "load":
             response = "if you see this it didnt work :/"  
             
@@ -511,7 +514,7 @@ def vllm_api(
                 "max_model_len":int(max_model_len),
                 "tensor_parallel_size":int(tensor_parallel_size),
                 "gpu_memory_utilization":float(gpu_memory_utilization),
-                "model":model
+                "model":str(model)
             })
             if response.status_code == 200:
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
@@ -676,7 +679,7 @@ with gr.Blocks() as app:
     
     
     load_btn = gr.Button("Load into vLLM (port: 1370)", visible=True)
-    load_btn.click(lambda max_model_len, tensor_parallel_size, gpu_memory_utilization, model: vllm_api("load", max_model_len, tensor_parallel_size, gpu_memory_utilization, model), inputs=[max_model_len, tensor_parallel_size, gpu_memory_utilization, model_dropdown], outputs=create_response)
+
     
     
     with gr.Row():
@@ -688,7 +691,10 @@ with gr.Blocks() as app:
     prompt_in = gr.Textbox(placeholder="Ask a question", value="Follow the", label="Query", show_label=True, visible=True)  
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
     prompt_btn = gr.Button("Submit", visible=True)
-    prompt_btn.click(lambda top_p, temperature, max_tokens, prompt_in: vllm_api("generate", top_p, temperature, max_tokens, prompt_in), inputs=[top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
+    
+    load_btn.click(lambda model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in: vllm_api("load", model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in), inputs=[model_dropdown, selected_model_pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
+        
+    prompt_btn.click(lambda model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in: vllm_api("generate", model, pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in), inputs=[model_dropdown, selected_model_pipeline_tag, max_model_len, tensor_parallel_size, gpu_memory_utilization, top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
 
     
     gpu_dataframe = gr.Dataframe(label="GPU information")
