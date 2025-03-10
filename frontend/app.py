@@ -421,7 +421,7 @@ def download_from_hf_hub(selected_model_id):
             repo_id=selected_model_id,
             local_dir=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'
         )
-        return f'Saved {selected_model_id} to {model_path}'
+        return f'Saved to {model_path}'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return f'download error: {e}'
@@ -520,6 +520,7 @@ def vllm_api(
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
                 response_json = response.json()
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
+                response_json["result_data"] = response_json["result_data"][1:]
                 return response_json["result_data"]                
             else:
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response: {response}')
@@ -710,9 +711,15 @@ with gr.Blocks() as app:
     @gr.render(inputs=container_state)
     def render_container(render_container_list):
         docker_container_list = get_docker_container_list()
-        docker_container_list_running = [c for c in docker_container_list if c["State"]["Status"] == "running" and c["Name"] != "container_redis" and c["Name"] != "container_backend" and c["Name"] != "container_frontend"]
-        docker_container_list_not_running = [c for c in docker_container_list if c["State"]["Status"] != "running" and c["Name"] != "container_redis" and c["Name"] != "container_backend" and c["Name"] != "container_frontend"]
-        docker_container_list_sys = [c for c in docker_container_list if c["Name"] == "container_redis" or c["Name"] == "container_backend" or c["Name"] == "container_frontend"]
+        docker_container_list_sys = [c for c in docker_container_list if c["Name"] in ["container_redis","container_backend", "container_frontend"]]
+        print(f'found docker_container_list_sys len: {len(docker_container_list_sys)}')
+        
+        docker_container_list_no_sys = [c for c in docker_container_list if c["Name"] not in ["container_redis","container_backend", "container_frontend"]]        
+        print(f'found docker_container_list_no_sys len: {len(docker_container_list_no_sys)}')
+        
+        docker_container_list_running = [c for c in docker_container_list_no_sys if c["State"]["Status"] == "running"]
+        docker_container_list_not_running = [c for c in docker_container_list_no_sys if c["State"]["Status"] != "running"]
+        
 
 
             
