@@ -520,7 +520,7 @@ def vllm_api(
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
                 response_json = response.json()
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
-                response_json["result_data"] = response_json["result_data"][1:]
+                response_json["result_data"] = response_json["result_data"]
                 return response_json["result_data"]                
             else:
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response: {response}')
@@ -711,6 +711,10 @@ with gr.Blocks() as app:
     @gr.render(inputs=container_state)
     def render_container(render_container_list):
         docker_container_list = get_docker_container_list()
+        print(f'found docker_container_list: {len(docker_container_list)}')
+        all_container_names = [c["Name"] for c in docker_container_list]
+        print(f'found all_container_names: {len(all_container_names)}')
+        
         docker_container_list_sys = [c for c in docker_container_list if c["Name"] in ["container_redis","container_backend", "container_frontend"]]
         print(f'found docker_container_list_sys len: {len(docker_container_list_sys)}')
         
