@@ -421,7 +421,7 @@ def download_from_hf_hub(selected_model_id):
             repo_id=selected_model_id,
             local_dir=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'
         )
-        return f'Download of {selected_model_id} done! saved in {model_path}'
+        return f'Saved {selected_model_id} to {model_path}'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
         return f'download error: {e}'
@@ -474,26 +474,45 @@ def get_download_speed():
 
 
 VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
-
-
-
-# Call with varying keyword arguments
-
-# Output:
-# Hello, John!
-# Hi, Maria!
-# Good morning, Alice!
-
-    
-def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
+   
+# def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
+def vllm_api(
+                req_type,
+                max_model_len=None,
+                tensor_parallel_size=None,
+                gpu_memory_utilization=None,
+                model=None,
+                max_tokens=None,
+                temperature=None,
+                prompt_in=None
+             ):
     try:
-        response = "if you see this it didnt work :/"
         
-        if req_type == 'generate':
+        FALLBACK_VLLM_API = {}
         
+        if req_type == "load":
+            response = "if you see this it didnt work :/"  
+            response = requests.post(VLLM_URL, json={
+                "req_type":"load",
+                "max_model_len":int(max_model_len),
+                "tensor_parallel_size":int(tensor_parallel_size),
+                "gpu_memory_utilization":float(gpu_memory_utilization),
+                "model":model
+            })
+            if response.status_code == 200:
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
+                response_json = response.json()
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
+                return response_json["result_data"]                
+            else:
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response: {response}')
+                FALLBACK_VLLM_API["result_data"] = f'{response}'
+                return FALLBACK_VLLM_API
+    
+    
 
-            print(f"try 2")
-            
+        if req_type == "generate":
+            response = "if you see this it didnt work :/"  
             response = requests.post(VLLM_URL, json={
                 "req_type":"generate",
                 "prompt":prompt_in,
@@ -502,19 +521,20 @@ def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
                 "max_tokens":max_tokens
             })
             if response.status_code == 200:
-                logging.info(f'[vllm_api] status_code: {response.status_code}') 
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
                 response_json = response.json()
-                logging.info(f'[vllm_api] response_json: {response_json}') 
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] response_json: {response_json}') 
                 return response_json["result_data"]                
-        
-        logging.info(f'[vllm_api] response: {response}') 
-        print("response")
-        print(response)
-        return f'{response}'
+            else:
+                logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] response: {response}')
+                FALLBACK_VLLM_API["result_data"] = f'{response}'
+                return FALLBACK_VLLM_API
+    
+    
     except Exception as e:
-        logging.exception(f'Exception occured: {e}', exc_info=True)
-        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return f'{e}'
+        logging.exception(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] Exception occured: {e}', exc_info=True)
+        FALLBACK_VLLM_API["result_data"] = f'{e}'
+        return FALLBACK_VLLM_API
 
 
 
@@ -636,8 +656,22 @@ with gr.Blocks() as app:
 
 
 
-    max_tokens = gr.Number(label="max_tokens (1-vllm instance req_max_model_len)", value=150, visible=True)
-    temperature = gr.Number(label="temperature", value=1.0, visible=True)
+    
+    with gr.Row():
+        max_model_len = gr.Number(label="max_model_len", placeholder="2048", value=2048, visible=True)
+        tensor_parallel_size = gr.Number(label="tensor_parallel_size", placeholder="1", value=1, visible=True)
+        gpu_memory_utilization = gr.Textbox(label="gpu_memory_utilization", placeholder="0.87", value=0.87, visible=True)
+    
+    
+    load_btn = gr.Button("Load into vLLM (port: 1370)", visible=True)
+    load_btn.click(lambda max_model_len, tensor_parallel_size, gpu_memory_utilization, model: vllm_api("load", max_model_len, tensor_parallel_size, gpu_memory_utilization, model), inputs=[max_model_len, tensor_parallel_size, gpu_memory_utilization, model_dropdown], outputs=create_response)
+    
+    
+    with gr.Row():
+        max_tokens = gr.Number(label="max_tokens (1-vllm instance req_max_model_len)", value=150, visible=True)
+        temperature = gr.Number(label="temperature", value=1.0, visible=True)
+    
+    
     
     prompt_in = gr.Textbox(placeholder="Ask a question", value="Follow the", label="Query", show_label=True, visible=True)  
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
