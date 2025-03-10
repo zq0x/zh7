@@ -471,24 +471,36 @@ def get_download_speed():
 
 VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
 
-def vllm_api(request: gr.Request):
+
+
+# Call with varying keyword arguments
+
+# Output:
+# Hello, John!
+# Hi, Maria!
+# Good morning, Alice!
+
+
+def vllm_api(**kwargs):
     try:
         response = "if you see this it didnt work :/"
-        if request:
-            print("Request headers dictionary:", request.headers)
-            print("IP address:", request.client.host)
-            print("Query parameters:", dict(request.query_params))
-            print("Session hash:", request.session_hash)            
+        try:
+            print(f"try 1")
+            for name, greeting in kwargs.items():
+                print(f"{greeting}, {name}!")
+        except Exception as e:
+            logging.exception(f'Exception occured: {e}', exc_info=True)
+            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+
+        print(f"try 2")
             
-            # if request.
-            
-            response = requests.post(VLLM_URL, json={
-                "req_type":"generate",
-                "prompt":"tell me a chuck norris joke about frontend",
-                "temperature":0.7,
-                "top_p":0.95,
-                "max_tokens":150
-            })
+        response = requests.post(VLLM_URL, json={
+            "req_type":"generate",
+            "prompt":"tell me a chuck norris joke about frontend",
+            "temperature":0.7,
+            "top_p":0.95,
+            "max_tokens":150
+        })
 
             
         print("response")
@@ -617,7 +629,7 @@ with gr.Blocks() as app:
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
     prompt_btn = gr.Button("Submit", visible=True)
     prompt_btn.click(lambda prompt_in: vllm_api("generate", prompt_in), inputs=[prompt_in], outputs=prompt_out)
-    
+
     
     gpu_dataframe = gr.Dataframe(label="GPU information")
     gpu_timer = gr.Timer(1,active=True)
