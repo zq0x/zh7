@@ -776,13 +776,14 @@ with gr.Blocks() as app:
     def refresh_container_list():
         try:
             global docker_container_list
-            response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method": "list"})
+            response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method":"list"})
+            
             docker_container_list = response.json()
             return docker_container_list
         except Exception as e:
             print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
             return f'err {str(e)}'
-                 
+            
     def check_container_running(container_name):
         try:
             docker_container_list = get_docker_container_list()
