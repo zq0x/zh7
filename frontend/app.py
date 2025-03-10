@@ -543,7 +543,16 @@ def docker_api(req_type,req_model=None,req_task=None,req_prompt=None,req_tempera
 
 
 
-
+def refresh_container():
+    try:
+        global docker_container_list
+        response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method": "list"})
+        docker_container_list = response.json()
+        return docker_container_list
+    
+    except Exception as e:
+        print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        return f'err {str(e)}'
 
 
 
@@ -643,16 +652,7 @@ with gr.Blocks() as app:
         docker_container_list_running = [c for c in docker_container_list if c["State"]["Status"] == "running"]
         docker_container_list_not_running = [c for c in docker_container_list if c["State"]["Status"] != "running"]
 
-        def refresh_container():
-            try:
-                global docker_container_list
-                response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method": "list"})
-                docker_container_list = response.json()
-                return docker_container_list
-            
-            except Exception as e:
-                print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-                return f'err {str(e)}'
+
             
         gr.Markdown(f'### Container running ({len(docker_container_list_running)})')
 
@@ -772,39 +772,18 @@ with gr.Blocks() as app:
                 <hr>
                 """
             )
-            
-    def refresh_container_list():
-        try:
-            global docker_container_list
-            response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method":"list"})
-            
-            docker_container_list = response.json()
-            return docker_container_list
-        except Exception as e:
-            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-            return f'err {str(e)}'
-            
-    def check_container_running(container_name):
-        try:
-            docker_container_list = get_docker_container_list()
-            docker_container_list_running = [c for c in docker_container_list if c["name"] == container_name]
-            if len(docker_container_list_running) > 0:
-                return f'Yes container is running!'
-        except Exception as e:
-            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-            return f'err {str(e)}'
-    
+
     timer_dl = gr.Timer(1,active=False)
     timer_dl.tick(get_download_speed, outputs=timer_dl_box)    
     
     
     timer_c = gr.Timer(1,active=False)
-    timer_c.tick(refresh_container_list)
+    timer_c.tick(refresh_container)
     
     btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=False), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
     
-    btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container_list, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.update(visible=True), None, timer_dl_box2).then(lambda: gr.update(visible=True), None, btn_interface)
+    btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.update(visible=True), None, timer_dl_box2).then(lambda: gr.update(visible=True), None, btn_interface)
 
 
     
