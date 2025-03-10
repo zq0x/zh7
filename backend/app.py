@@ -435,7 +435,7 @@ def get_gpu_info():
                 # Get GPU temperature
                 temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
                 res_temperature = f'{temperature}°C'
-                current_gpu_info['temperature'] = f'{temperature}'
+                current_gpu_info['res_temperature'] = f'{res_temperature}'
             except Exception as e:
                 print(f'3 gpu_info {e}')
                 
@@ -503,22 +503,23 @@ def get_gpu_info():
             current_gpu_info['res_not_supported_str'] = f'{res_not_supported_str}'
             
             gpu_info.append({                
-                "gpu_i": current_gpu_info.get("gpu_i", "0"),
-                "current_uuid": current_gpu_info.get("current_uuid", "0"),
-                "gpu_util": current_gpu_info.get("gpu_util", "0"),
-                "mem_util": current_gpu_info.get("mem_util", "0"),
-                "mem_total": current_gpu_info.get("mem_total", "0"),
-                "mem_used": current_gpu_info.get("mem_used", "0"),
-                "mem_free": current_gpu_info.get("mem_free", "0"),
-                "temperature": current_gpu_info.get("temperature", "0"),
-                "fan_speed": current_gpu_info.get("fan_speed", "0"),
-                "power_usage": current_gpu_info.get("power_usage", "0"),
-                "clock_info_graphics": current_gpu_info.get("clock_info_graphics", "0"),
-                "clock_info_mem": current_gpu_info.get("clock_info_mem", "0"),
-                "cuda_cores": current_gpu_info.get("cuda_cores", "0"),
-                "compute_capability": current_gpu_info.get("compute_capability", "0"),
-                "supported": current_gpu_info.get("supported", "0"),
-                "not_supported": current_gpu_info.get("not_supported", "0"),
+                "gpu_i": current_gpu_info.get("res_gpu_i", "0"),
+                "current_uuid": current_gpu_info.get("res_current_uuid", "0"),
+                "gpu_util": current_gpu_info.get("res_gpu_util", "0"),
+                "mem_util": current_gpu_info.get("res_mem_util", "0"),
+                "mem_total": current_gpu_info.get("res_mem_total", "0"),
+                "mem_used": current_gpu_info.get("res_mem_used", "0"),
+                "mem_free": current_gpu_info.get("res_mem_free", "0"),
+                "temperature": current_gpu_info.get("res_temperature", "0"),
+                "fan_speed": current_gpu_info.get("res_fan_speed", "0"),
+                "power_usage": current_gpu_info.get("res_power_usage", "0"),
+                "clock_info_graphics": current_gpu_info.get("res_clock_info_graphics", "0"),
+                "clock_info_mem": current_gpu_info.get("res_clock_info_mem", "0"),
+                "cuda_cores": current_gpu_info.get("res_cuda_cores", "0"),
+                "compute_capability": current_gpu_info.get("res_compute_capability", "0"),
+                "supported": current_gpu_info.get("res_supported", "0"),
+                "not_supported": current_gpu_info.get("res_not_supported", "0"),
+                "not_supported": current_gpu_info.get("res_not_supported", "0"),
             })
                         
         print("gpu_info")

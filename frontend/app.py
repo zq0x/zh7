@@ -389,8 +389,11 @@ def gpu_to_pd():
         print("gpu_list")
         print(gpu_list)
         logging.info(f'[gpu_to_pd] gpu_list: {gpu_list}')  # Use logging.info instead of logging.exception
+        print("gpu_list 1")
         for entry in gpu_list:
+            print("gpu_list 2")
             gpu_info = ast.literal_eval(entry['gpu_info'])  # Parse the string into a dictionary
+            print("gpu_list 3")
             rows.append({                
                 "current_uuid": gpu_info.get("current_uuid", "0"),
                 "gpu_i": entry.get("gpu_i", "0"),
