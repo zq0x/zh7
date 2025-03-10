@@ -480,27 +480,23 @@ VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
 # Hi, Maria!
 # Good morning, Alice!
 
-
-def vllm_api(**kwargs):
+    
+def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
     try:
         response = "if you see this it didnt work :/"
-        try:
-            print(f"try 1")
-            for name, greeting in kwargs.items():
-                print(f"{greeting}, {name}!")
-        except Exception as e:
-            logging.exception(f'Exception occured: {e}', exc_info=True)
-            print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        
+        if req_type == 'generate':
+        
 
-        print(f"try 2")
+            print(f"try 2")
             
-        response = requests.post(VLLM_URL, json={
-            "req_type":"generate",
-            "prompt":"tell me a chuck norris joke about frontend",
-            "temperature":0.7,
-            "top_p":0.95,
-            "max_tokens":150
-        })
+            response = requests.post(VLLM_URL, json={
+                "req_type":"generate",
+                "prompt":prompt_in,
+                "temperature":temperature,
+                "top_p":0.95,
+                "max_tokens":max_tokens
+            })
 
             
         print("response")
@@ -622,13 +618,13 @@ with gr.Blocks() as app:
 
 
 
-    max_tokens = gr.Number(label="max_tokens", visible=True)
-    temperature = gr.Number(label="temperature", visible=True)
+    max_tokens = gr.Number(label="max_tokens (1-vllm instance req_max_model_len)", value=150, visible=True)
+    temperature = gr.Number(label="temperature", value=1.0, visible=True)
     
-    prompt_in = gr.Textbox(placeholder="Ask a question", label="Query", show_label=True, visible=True)  
+    prompt_in = gr.Textbox(placeholder="Ask a question", value="Follow the", label="Query", show_label=True, visible=True)  
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
     prompt_btn = gr.Button("Submit", visible=True)
-    prompt_btn.click(lambda prompt_in: vllm_api("generate", prompt_in), inputs=[prompt_in], outputs=prompt_out)
+    prompt_btn.click(lambda max_tokens, temperature, prompt_in: vllm_api("generate", max_tokens, temperature, prompt_in), inputs=[max_tokens, temperature, prompt_in], outputs=prompt_out)
 
     
     gpu_dataframe = gr.Dataframe(label="GPU information")
