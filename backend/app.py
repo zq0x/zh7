@@ -389,90 +389,144 @@ def get_gpu_info():
         print(f'hm ok device_count: {device_count}')
         gpu_info = []
         for i in range(0,device_count):
+            current_gpu_info = {}
             print(f'hm ok i: {i}')
+            current_gpu_info['gpu_int'] = str(i)           
+            
+
+            
             handle = pynvml.nvmlDeviceGetHandleByIndex(i)
             
-            res_current_uuid = pynvml.nvmlDeviceGetUUID(handle)
+
             
+            try:
+                res_current_uuid = pynvml.nvmlDeviceGetUUID(handle)
+                current_gpu_info['res_current_uuid'] = f'{res_current_uuid}'
+            except Exception as e:
+                print(f'0 gpu_info {e}')
             
             
             
         
             print(f'hm ok current_uuid: {current_uuid}')
             
-            utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-            # mem_util = f'{(mem_used / mem_total) * 100} %'
-            res_gpu_util = f'{utilization.gpu}%'
-            res_mem_util = f'{utilization.memory}%'
+            try:
+                utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+                # mem_util = f'{(mem_used / mem_total) * 100} %'
+                res_gpu_util = f'{utilization.gpu}%'
+                current_gpu_info['res_gpu_util'] = f'{res_gpu_util}'
+                res_mem_util = f'{utilization.memory}%'
+                current_gpu_info['res_mem_util'] = f'{res_mem_util}'
+            except Exception as e:
+                print(f'1 gpu_info {e}')
 
+            try: 
+                mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                res_mem_total = f'{mem_info.total / 1024 ** 2:.2f} MB'
+                current_gpu_info['res_mem_total'] = f'{res_mem_total}'
+                res_mem_used = f'{mem_info.used / 1024 ** 2:.2f} MB'
+                current_gpu_info['res_mem_used'] = f'{res_mem_used}'
+                res_mem_free = f'{mem_info.free / 1024 ** 2:.2f} MB'
+                current_gpu_info['res_mem_free'] = f'{res_mem_free}'
+            except Exception as e:
+                print(f'2 gpu_info {e}')
             
-            mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            res_mem_total = f'{mem_info.total / 1024 ** 2:.2f} MB'
-            res_mem_used = f'{mem_info.used / 1024 ** 2:.2f} MB'            
-            res_mem_free = f'{mem_info.free / 1024 ** 2:.2f} MB'
-            
-            
-            # Get GPU temperature
-            temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-            res_temperature = f'{temperature}°C'
+            try:
+                # Get GPU temperature
+                temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+                res_temperature = f'{temperature}°C'
+                current_gpu_info['temperature'] = f'{temperature}'
+            except Exception as e:
+                print(f'3 gpu_info {e}')
+                
+            try:
+                # Get GPU fan speed
+                fan_speed = pynvml.nvmlDeviceGetFanSpeed(handle)
+                res_fan_speed = f'{fan_speed}%'
+                current_gpu_info['res_fan_speed'] = f'{res_fan_speed}'
+            except Exception as e:
+                print(f'4 gpu_info {e}')
 
-            # Get GPU fan speed
-            fan_speed = pynvml.nvmlDeviceGetFanSpeed(handle)
-            res_fan_speed = f'{fan_speed}%'
 
-            # Get GPU power usage
-            power_usage = pynvml.nvmlDeviceGetPowerUsage(handle)
-            res_power_usage = f'{power_usage / 1000:.2f} W'            
+            try:
+                # Get GPU power usage
+                power_usage = pynvml.nvmlDeviceGetPowerUsage(handle)
+                res_power_usage = f'{power_usage / 1000:.2f} W'
+                current_gpu_info['res_power_usage'] = f'{res_power_usage}'
+            except Exception as e:
+                print(f'5 gpu_info {e}')
         
-            # Get GPU clock speeds
-            clock_info_graphics = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
-            res_clock_info_graphics = f'{clock_info_graphics} MHz'
+        
+            try:
+                # Get GPU clock speeds
+                clock_info_graphics = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
+                res_clock_info_graphics = f'{clock_info_graphics} MHz'
+                current_gpu_info['res_clock_info_graphics'] = f'{res_clock_info_graphics}'
+            except Exception as e:
+                print(f'6 gpu_info {e}')
             
-            clock_info_mem = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_MEM)
-            res_clock_info_mem = f'{clock_info_mem} MHz'
             
-            # Get GPU compute capability (compute_capability)
-            cuda_cores = pynvml.nvmlDeviceGetNumGpuCores(handle)
-            res_cuda_cores = f'{cuda_cores}'
+            try:
+                clock_info_mem = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_MEM)
+                res_clock_info_mem = f'{clock_info_mem} MHz'
+                current_gpu_info['res_clock_info_mem'] = f'{res_clock_info_mem}'
+            except Exception as e:
+                print(f'7 gpu_info {e}')
+                
+            try:
+                # Get GPU compute capability (compute_capability)
+                cuda_cores = pynvml.nvmlDeviceGetNumGpuCores(handle)
+                res_cuda_cores = f'{cuda_cores}'
+                current_gpu_info['res_cuda_cores'] = f'{res_cuda_cores}'
+            except Exception as e:
+                print(f'8 gpu_info {e}')
 
-            # Get GPU compute capability (CUDA cores)
-            compute_capability = pynvml.nvmlDeviceGetCudaComputeCapability(handle)
-            compute_capability_str = f'{compute_capability[0]}.{compute_capability[1]}'
-            res_compute_capability = f'{compute_capability_str}'
             res_supported = []
             res_not_supported = []
-            if float(res_compute_capability) >= 8:
-                res_supported.append('Bfloat16')
-            else:
-                res_not_supported.append('Bfloat16')
+            try:
+                # Get GPU compute capability (CUDA cores)
+                compute_capability = pynvml.nvmlDeviceGetCudaComputeCapability(handle)
+                compute_capability_str = f'{compute_capability[0]}.{compute_capability[1]}'
+                res_compute_capability = f'{compute_capability_str}'
+
+                if float(res_compute_capability) >= 8:
+                    res_supported.append('Bfloat16')
+                else:
+                    res_not_supported.append('Bfloat16')
+            except Exception as e:
+                print(f'9 gpu_info {e}')
+            
             
             res_supported_str = ",".join(res_supported)
+            current_gpu_info['res_supported_str'] = f'{res_supported_str}'
             res_not_supported_str = ",".join(res_not_supported)
+            current_gpu_info['res_not_supported_str'] = f'{res_not_supported_str}'
             
-            gpu_info.append({
-                "gpu_i": i,
-                "current_uuid": res_current_uuid,
-                "gpu_util": res_gpu_util,
-                "mem_util": res_mem_util,
-                "supported": res_supported_str,
-                "not_supported": res_not_supported_str,
-                "mem_total": res_mem_total,
-                "mem_used": res_mem_used,
-                "mem_free": res_mem_free,
-                "temperature": res_temperature,
-                "fan_speed": res_fan_speed,
-                "power_usage": res_power_usage,
-                "clock_info_graphics": res_clock_info_graphics,
-                "clock_info_mem": res_clock_info_mem,
-                "cuda_cores": res_cuda_cores,
-                "compute_capability": res_compute_capability
+            gpu_info.append({                
+                "gpu_i": current_gpu_info.get("gpu_i", "0"),
+                "current_uuid": current_gpu_info.get("current_uuid", "0"),
+                "gpu_util": current_gpu_info.get("gpu_util", "0"),
+                "mem_util": current_gpu_info.get("mem_util", "0"),
+                "mem_total": current_gpu_info.get("mem_total", "0"),
+                "mem_used": current_gpu_info.get("mem_used", "0"),
+                "mem_free": current_gpu_info.get("mem_free", "0"),
+                "temperature": current_gpu_info.get("temperature", "0"),
+                "fan_speed": current_gpu_info.get("fan_speed", "0"),
+                "power_usage": current_gpu_info.get("power_usage", "0"),
+                "clock_info_graphics": current_gpu_info.get("clock_info_graphics", "0"),
+                "clock_info_mem": current_gpu_info.get("clock_info_mem", "0"),
+                "cuda_cores": current_gpu_info.get("cuda_cores", "0"),
+                "compute_capability": current_gpu_info.get("compute_capability", "0"),
+                "supported": current_gpu_info.get("supported", "0"),
+                "not_supported": current_gpu_info.get("not_supported", "0"),
             })
+                        
         print("gpu_info")
         print(gpu_info) 
         return gpu_info
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return 0
+        return f'{e}'
 
 current_gpu_info = get_gpu_info()
 
