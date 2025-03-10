@@ -66,12 +66,16 @@ def get_gpu_data():
 def get_docker_container_list():
     global docker_container_list
     response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method":"list"})
+    print(f'[get_docker_container_list] response: {response}')
     res_json = response.json()
+    print(f'[get_docker_container_list] res_json: {res_json}')
     docker_container_list = res_json.copy()
     if response.status_code == 200:
+        print(f'[get_docker_container_list] res = 200')
         return res_json
     else:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        logging.info(f'[get_docker_container_list] [get_docker_container_list] res_json: {res_json}')
         return f'Error: {response.status_code}'
 
 def docker_api_logs(req_model):

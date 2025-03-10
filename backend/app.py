@@ -385,11 +385,9 @@ def get_gpu_info():
     try:
 
         device_count = pynvml.nvmlDeviceGetCount()
-        print(f'hm ok device_count: {device_count}')
         gpu_info = []
         for i in range(0,device_count):
             current_gpu_info = {}
-            print(f'hm ok i: {i}')
             current_gpu_info['gpu_int'] = str(i)           
             
 
@@ -407,7 +405,6 @@ def get_gpu_info():
             
             
         
-            print(f'hm ok current_uuid: {current_uuid}')
             
             try:
                 utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
@@ -527,8 +524,6 @@ def get_gpu_info():
                 "not_supported": current_gpu_info.get("res_not_supported", "0"),
             })
                         
-        print("gpu_info")
-        print(gpu_info) 
         return gpu_info
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -546,14 +541,12 @@ async def redis_timer_gpu():
                 updated_gpu_data = []
                 print(f'huhh  len(current_gpu_info): {len(current_gpu_info)}')
                 for gpu_i in range(0,len(current_gpu_info)):
-                    print(f'huhh  gpu_i: {gpu_i}')
                     update_data = {
                         "gpu_i": gpu_i,
                         "gpu_info": str(current_gpu_info[gpu_i]),
                         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     }
                     updated_gpu_data.append(update_data)
-                    print(f'1 updated_gpu_data: {updated_gpu_data}')
                 await r.set('db_gpu', json.dumps(updated_gpu_data))
             else:
                 updated_gpu_data = []
@@ -564,7 +557,6 @@ async def redis_timer_gpu():
                         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     }
                     updated_gpu_data.append(update_data)
-                    print(f'2 updated_gpu_data: {updated_gpu_data}')
                 await r.set('db_gpu', json.dumps(updated_gpu_data))
             await asyncio.sleep(1.0)
         except Exception as e:
