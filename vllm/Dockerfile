@@ -10,9 +10,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip3 install vllm fastapi uvicorn pynvml
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY app.py /app/app.py
+COPY app.py /usr/src/app/app.py
 
 EXPOSE 1370
 

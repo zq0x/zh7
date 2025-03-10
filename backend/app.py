@@ -539,7 +539,6 @@ async def redis_timer_gpu():
             if res_db_gpu is not None:
                 db_gpu = json.loads(res_db_gpu)
                 updated_gpu_data = []
-                print(f'huhh  len(current_gpu_info): {len(current_gpu_info)}')
                 for gpu_i in range(0,len(current_gpu_info)):
                     update_data = {
                         "gpu_i": gpu_i,
