@@ -119,23 +119,23 @@ FALLBACK_CONTAINER_STATS = {
 
 
 
-print(f'** connecting to redis on port: {os.getenv("REDIS_PORT")} ... ')
+# print(f'** connecting to redis on port: {os.getenv("REDIS_PORT")} ... ')
 r = redis.Redis(host="redis", port=int(os.getenv("REDIS_PORT", 6379)), db=0)
 
-print(f'** connecting to pynvml ... ')
+# print(f'** connecting to pynvml ... ')
 pynvml.nvmlInit()
 device_count = pynvml.nvmlDeviceGetCount()
-print(f'** pynvml found GPU: {device_count}')
+# print(f'** pynvml found GPU: {device_count}')
 
 device_uuids = []
 for i in range(0,device_count):
-    print(f'1 i {i}')
+    # print(f'1 i {i}')
     handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-    print(f'1 handle {handle}')
+    # print(f'1 handle {handle}')
     current_uuid = pynvml.nvmlDeviceGetUUID(handle)
     device_uuids.append(current_uuid)
 
-print(f'** pynvml found uuids ({len(device_uuids)}): {device_uuids} ')
+# print(f'** pynvml found uuids ({len(device_uuids)}): {device_uuids} ')
 
 
 
@@ -248,10 +248,10 @@ def get_network_info():
         })
         
         
-        print(f'finding all containers ..')
+        # print(f'finding all containers ..')
         res_container_list = client.containers.list(all=True)
         
-        print(f'Found {len(res_container_list)} containers!')
+        # print(f'Found {len(res_container_list)} containers!')
 
         # Iterate through each container
         for container in res_container_list:
@@ -274,15 +274,14 @@ def get_network_info():
             })
             
             # Print container stats for debugging
-            print(f'Container: {container.name}')
-            print(f'Stats: {container_stats}')
-            print(f'Network Info: {networks}')
-            print(f'RX Bytes: {rx_bytes}')
-            print()
+            # print(f'Container: {container.name}')
+            # print(f'Stats: {container_stats}')
+            # print(f'Network Info: {networks}')
+            # print(f'RX Bytes: {rx_bytes}')
 
         # Now `network_info` contains the network information for all containers
-        print('Network Info:')
-        print(network_info)
+        # print('Network Info:')
+        # print(network_info)
 
 
         

@@ -302,9 +302,7 @@ def network_to_pd():
     rows = []
     try:
         network_list = get_network_data()
-        print("network_list")
-        print(network_list)
-        logging.info(f'[network_to_pd] network_list: {network_list}')  # Use logging.info instead of logging.exception
+        # logging.info(f'[network_to_pd] network_list: {network_list}')  # Use logging.info instead of logging.exception
         for entry in network_list:
             # entry_info = ast.literal_eval(entry['info'])  # Parse the string into a dictionary
             # print("entry_info")
