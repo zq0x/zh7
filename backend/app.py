@@ -214,7 +214,7 @@ def get_download_speed():
     try:
         global prev_bytes_recv
         
-        print(f'trying to get download speed ...')
+        # print(f'trying to get download speed ...')
         net_io = psutil.net_io_counters()
         bytes_recv = net_io.bytes_recv
         download_speed = bytes_recv - prev_bytes_recv
@@ -325,7 +325,7 @@ def get_network_info():
         #         "timestamp": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         #     })
             
-        print(f'got all containers! printing final before responding ({len(network_info)}) ')        
+        # print(f'got all containers! printing final before responding ({len(network_info)}) ')        
         return network_info
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -349,9 +349,9 @@ async def redis_timer_network():
             if res_db_network is not None:
                 db_network = json.loads(res_db_network)
                 updated_network_data = []
-                print(f' [network] 1 len(current_gpu_info): {len(current_network_info)}')
+                # print(f' [network] 1 len(current_gpu_info): {len(current_network_info)}')
                 for net_info_obj in current_network_info:
-                    print(f' [network] net_info_obj: {net_info_obj}')
+                    # print(f' [network] net_info_obj: {net_info_obj}')
                     update_data = {
                         "container": str(net_info_obj["container"]),
                         "info": str(net_info_obj["info"]),
@@ -359,7 +359,7 @@ async def redis_timer_network():
                         "timestamp": str(net_info_obj["timestamp"]),
                     }
                     updated_network_data.append(update_data)
-                    print(f'[network] 1 updated_network_data: {updated_network_data}')
+                    # print(f'[network] 1 updated_network_data: {updated_network_data}')
                 await r.set('db_network', json.dumps(updated_network_data))
             else:
                 updated_network_data = []
@@ -371,7 +371,7 @@ async def redis_timer_network():
                         "timestamp": str(net_info_obj["timestamp"]),
                     }
                     updated_network_data.append(update_data)
-                    print(f'[network] 2 updated_network_data: {updated_network_data}')
+                    # print(f'[network] 2 updated_network_data: {updated_network_data}')
                 await r.set('db_network', json.dumps(updated_network_data))
             await asyncio.sleep(1.0)
         except Exception as e:
@@ -566,10 +566,10 @@ async def redis_timer_gpu():
                     updated_gpu_data.append(update_data)
                     print(f'2 updated_gpu_data: {updated_gpu_data}')
                 await r.set('db_gpu', json.dumps(updated_gpu_data))
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(1.0)
         except Exception as e:
             print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] Error: {e}')
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(1.0)
 
 
 @asynccontextmanager
@@ -584,7 +584,7 @@ device_request = DeviceRequest(count=-1, capabilities=[["gpu"]])
 
 @app.get("/")
 async def root():
-    return f'Hello from server {os.getenv("CONTAINER_PORT")}!'
+    return f'Hello from server {os.getenv("BACKEND_PORT")}!'
 
 @app.post("/dockerrest")
 async def docker_rest(request: Request):
@@ -748,4 +748,4 @@ async def docker_rest(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("CONTAINER_PORT")))
+    uvicorn.run(app, host=f'{os.getenv("BACKEND_IP")}', port=int(os.getenv("BACKEND_PORT")))
