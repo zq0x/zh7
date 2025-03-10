@@ -515,10 +515,10 @@ def vllm_api(
             response = "if you see this it didnt work :/"  
             response = requests.post(VLLM_URL, json={
                 "req_type":"generate",
-                "prompt":prompt_in,
-                "temperature":temperature,
+                "prompt":str(prompt_in),
+                "temperature":float(temperature),
                 "top_p":0.95,
-                "max_tokens":max_tokens
+                "max_tokens":int(max_tokens)
             })
             if response.status_code == 200:
                 logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] status_code: {response.status_code}') 
@@ -658,8 +658,8 @@ with gr.Blocks() as app:
 
     
     with gr.Row():
-        max_model_len = gr.Number(label="max_model_len", placeholder="2048", value=2048, visible=True)
-        tensor_parallel_size = gr.Number(label="tensor_parallel_size", placeholder="1", value=1, visible=True)
+        max_model_len = gr.Number(label="max_model_len", value=2048, visible=True)
+        tensor_parallel_size = gr.Number(label="tensor_parallel_size", value=1, visible=True)
         gpu_memory_utilization = gr.Textbox(label="gpu_memory_utilization", placeholder="0.87", value=0.87, visible=True)
     
     
@@ -668,9 +668,9 @@ with gr.Blocks() as app:
     
     
     with gr.Row():
-        max_tokens = gr.Number(label="max_tokens (1-vllm instance req_max_model_len)", value=150, visible=True)
-        temperature = gr.Number(label="temperature", value=1.0, visible=True)
-    
+        top_p = gr.Textbox(label="top_p", placeholder="0.95", value=0.95, visible=True)
+        temperature = gr.Textbox(label="temperature", placeholder="0.8", value=0.8, visible=True)
+        max_tokens = gr.Number(label="max_tokens", value=150, visible=True)
     
     
     prompt_in = gr.Textbox(placeholder="Ask a question", value="Follow the", label="Query", show_label=True, visible=True)  
