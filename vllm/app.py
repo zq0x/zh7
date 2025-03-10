@@ -4,7 +4,6 @@ from datetime import datetime
 import os
 import torch
 import pynvml
-from vllm import LLM, SamplingParams
 from transformers import AutoModelForCausalLM
 import logging
 
@@ -64,73 +63,7 @@ llm_instance = None
 
 @app.get("/")
 async def root():
-    return f'Hello from server {os.getenv("CONTAINER_PORT")}!'
-
-@app.post("/vllmt")
-async def vllmt(request: Request):
-    global llm_instance
-    try:
-        req_data = await request.json()
-        logger.info(f'req_data: {req_data}')
-
-        if req_data["req_type"] == "load":
-            try:
-                model_name = req_data["req_model"]
-                logger.info(f'Loading model: {model_name}...')
-
-                free_memory = torch.cuda.mem_get_info()[0] / (1024 ** 3)  # Free memory in GB
-                logger.info(f'Available GPU memory: {free_memory:.2f} GB')
-
-                model_pretrained = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto")
-                model_size = sum(p.numel() * p.element_size() for p in model_pretrained.parameters()) / (1024 ** 3)  # Size in GB
-                logger.info(f'Model size: {model_size:.2f} GB')
-
-                llm_instance = LLM(
-                    model=model_name,
-                    tensor_parallel_size=1,
-                    gpu_memory_utilization=0.88,
-                    trust_remote_code=True
-                )
-                logger.info('Model loaded successfully.')
-
-                return JSONResponse({"result_status": 200, "result_data": "Model loaded successfully"})
-
-            except Exception as e:
-                logger.error(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-                return JSONResponse({"result_status": 404, "result_data": str(e)})
-
-        elif req_data["req_type"] == "generate":
-            try:
-                if llm_instance is None:
-                    raise HTTPException(status_code=400, detail="No model loaded. Please load a model first.")
-
-                prompt = req_data.get("req_prompt", "The future of AI is")
-                temperature = req_data.get("req_temperature", 0.8)
-                top_p = req_data.get("req_top_p", 0.95)
-                max_tokens = req_data.get("req_max_tokens", 100)
-
-                sampling_params = SamplingParams(
-                    temperature=temperature,
-                    top_p=top_p,
-                    max_tokens=max_tokens
-                )
-
-                logger.info(f'Generating text for prompt: {prompt}')
-                outputs = llm_instance.generate([prompt], sampling_params)
-                generated_text = outputs[0].outputs[0].text
-
-                return JSONResponse({"result_status": 200, "result_data": generated_text})
-
-            except Exception as e:
-                logger.error(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-                return JSONResponse({"result_status": 500, "result_data": str(e)})
-
-        else:
-            raise HTTPException(status_code=400, detail="Invalid request type.")
-
-    except Exception as e:
-        logger.error(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        return JSONResponse({"result_status": 500, "result_data": str(e)})
+    return f'Hello from server :DDDDDDDDDDDDDDDDDDDDD {os.getenv("CONTAINER_PORT")}!'
 
 if __name__ == "__main__":
     import uvicorn

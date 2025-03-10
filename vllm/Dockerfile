@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install vllm fastapi uvicorn pynvml
+RUN pip3 install fastapi uvicorn pynvml
 
 WORKDIR /usr/src/app
 

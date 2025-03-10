@@ -66,16 +66,16 @@ def get_gpu_data():
 def get_docker_container_list():
     global docker_container_list
     response = requests.post(f'http://container_backend:{os.getenv("BACKEND_PORT")}/dockerrest', json={"req_method":"list"})
-    print(f'[get_docker_container_list] response: {response}')
+    # print(f'[get_docker_container_list] response: {response}')
     res_json = response.json()
-    print(f'[get_docker_container_list] res_json: {res_json}')
+    # print(f'[get_docker_container_list] res_json: {res_json}')
     docker_container_list = res_json.copy()
     if response.status_code == 200:
-        print(f'[get_docker_container_list] res = 200')
+        # print(f'[get_docker_container_list] res = 200')
         return res_json
     else:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
-        logging.info(f'[get_docker_container_list] [get_docker_container_list] res_json: {res_json}')
+        # logging.info(f'[get_docker_container_list] [get_docker_container_list] res_json: {res_json}')
         return f'Error: {response.status_code}'
 
 def docker_api_logs(req_model):
@@ -482,16 +482,27 @@ def vllm_api(
                 tensor_parallel_size=None,
                 gpu_memory_utilization=None,
                 model=None,
-                max_tokens=None,
+                top_p=None,
                 temperature=None,
+                max_tokens=None,
                 prompt_in=None
              ):
     try:
         
         FALLBACK_VLLM_API = {}
-        
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{max_model_len}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{tensor_parallel_size}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{gpu_memory_utilization}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{model}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{top_p}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{temperature}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{max_tokens}]')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{prompt_in}]')
         if req_type == "load":
             response = "if you see this it didnt work :/"  
+            
+            logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] gpu_memory_utilization: {gpu_memory_utilization}')
             response = requests.post(VLLM_URL, json={
                 "req_type":"load",
                 "max_model_len":int(max_model_len),
@@ -513,11 +524,12 @@ def vllm_api(
 
         if req_type == "generate":
             response = "if you see this it didnt work :/"  
+            logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}] temperature: {temperature}')
             response = requests.post(VLLM_URL, json={
                 "req_type":"generate",
                 "prompt":str(prompt_in),
                 "temperature":float(temperature),
-                "top_p":0.95,
+                "top_p":float(top_p),
                 "max_tokens":int(max_tokens)
             })
             if response.status_code == 200:
@@ -636,13 +648,10 @@ with gr.Blocks() as app:
     info_textbox = gr.Textbox(value="Interface not possible for selected model. Try another model or check 'pipeline_tag', 'transformers', 'private', 'gated'", show_label=False, visible=False)
     btn_dl = gr.Button("Download", visible=True)
     btn_deploy = gr.Button("Deploy", visible=True)
-    btn_test = gr.Button("Test", visible=True)
     
     model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, selected_model_pipeline_tag).then(lambda: gr.update(visible=True), None, selected_model_transformers).then(lambda: gr.update(visible=True), None, selected_model_private).then(lambda: gr.update(visible=True), None, selected_model_downloads).then(lambda: gr.update(visible=True), None, selected_model_size).then(lambda: gr.update(visible=True), None, selected_model_gated).then(lambda: gr.update(visible=True), None, port_model).then(lambda current_value: current_value + 1, port_model, port_model).then(lambda: gr.update(visible=True), None, port_vllm).then(lambda current_value: current_value + 1, port_vllm, port_vllm).then(gr_load_check, [selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated],[info_textbox,btn_dl])
 
     create_response = gr.Textbox(label="Building container...", show_label=True, visible=False)  
-    timer_dl_box = gr.Textbox(label="Dowmload progress:", visible=False)
-    timer_dl_box2 = gr.Textbox(label="Dowmload array", visible=True)
     
     btn_interface = gr.Button("Load Interface",visible=False)
     @gr.render(inputs=[selected_model_pipeline_tag, selected_model_id], triggers=[btn_interface.click])
@@ -676,7 +685,7 @@ with gr.Blocks() as app:
     prompt_in = gr.Textbox(placeholder="Ask a question", value="Follow the", label="Query", show_label=True, visible=True)  
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
     prompt_btn = gr.Button("Submit", visible=True)
-    prompt_btn.click(lambda max_tokens, temperature, prompt_in: vllm_api("generate", max_tokens, temperature, prompt_in), inputs=[max_tokens, temperature, prompt_in], outputs=prompt_out)
+    prompt_btn.click(lambda top_p, temperature, max_tokens, prompt_in: vllm_api("generate", top_p, temperature, max_tokens, prompt_in), inputs=[top_p, temperature, max_tokens, prompt_in], outputs=prompt_out)
 
     
     gpu_dataframe = gr.Dataframe(label="GPU information")
@@ -817,20 +826,18 @@ with gr.Blocks() as app:
             )
 
     timer_dl = gr.Timer(1,active=False)
-    timer_dl.tick(get_download_speed, outputs=timer_dl_box)    
+    timer_dl.tick(get_download_speed, outputs=create_response)    
     
     
     timer_c = gr.Timer(1,active=False)
     timer_c.tick(refresh_container)
     
-    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=False), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
+    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
     
-    btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.update(visible=True), None, timer_dl_box2).then(lambda: gr.update(visible=True), None, btn_interface)
+    btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, btn_interface)
 
 
-    
-    btn_test.click(lambda selected_model: docker_api("test", selected_model, "auto","what is the capital of Germany?",0.77,"selected_config"), inputs=[model_dropdown], outputs=create_response)
     
     
 
