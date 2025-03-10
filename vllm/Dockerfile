@@ -2,17 +2,16 @@ FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
-    python3 \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
-    git \
+    python3-setuptools \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install fastapi uvicorn pynvml
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
+COPY . /usr/src/app
 WORKDIR /usr/src/app
-
-COPY app.py /usr/src/app/app.py
 
 EXPOSE 1370
 
