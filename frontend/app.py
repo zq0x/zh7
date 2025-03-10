@@ -474,21 +474,24 @@ def get_download_speed():
 
 
 VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
-   
+
+
 # def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
-def vllm_api(
-                req_type,
-                max_model_len=None,
-                tensor_parallel_size=None,
-                gpu_memory_utilization=None,
-                model=None,
-                top_p=None,
-                temperature=None,
-                max_tokens=None,
-                prompt_in=None
-             ):
+# def vllm_api(
+#                 req_type,
+#                 max_model_len=None,
+#                 tensor_parallel_size=None,
+#                 gpu_memory_utilization=None,
+#                 model=None,
+#                 top_p=None,
+#                 temperature=None,
+#                 max_tokens=None,
+#                 prompt_in=None
+#              ):
+def vllm_api(request: gr.Request):
+
     try:
-        
+        print(f'got request {request}')
         FALLBACK_VLLM_API = {}
         logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{req_type}]')
         logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [vllm_api] [{max_model_len}]')
