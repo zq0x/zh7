@@ -616,8 +616,7 @@ with gr.Blocks() as app:
     prompt_in = gr.Textbox(placeholder="Ask a question", label="Query", show_label=True, visible=True)  
     prompt_out = gr.Textbox(placeholder="Result will appear here", label="Output", show_label=True, visible=True)
     prompt_btn = gr.Button("Submit", visible=True)
-    prompt_btn.click(lambda: gr.update(label="Querying ..."), None, prompt_out).then(lambda: vllm_api("generate", prompt_in), inputs=[prompt_in], outputs=prompt_out)
-    
+    prompt_btn.click(lambda prompt_in: vllm_api("generate", prompt_in), inputs=[prompt_in], outputs=prompt_out)
     
     
     gpu_dataframe = gr.Dataframe(label="GPU information")
@@ -793,7 +792,7 @@ with gr.Blocks() as app:
     timer_c = gr.Timer(1,active=False)
     timer_c.tick(refresh_container_list)
     
-    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
+    btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=False), None, timer_c).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
     
     btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container_list, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, timer_dl_box).then(lambda: gr.update(visible=True), None, timer_dl_box2).then(lambda: gr.update(visible=True), None, btn_interface)
