@@ -43,8 +43,6 @@ def load_log_file(req_container,req_amount):
 def get_container_data():
     try:
         res_container_data_all = json.loads(r.get('db_container'))
-        print("res_container_data_all")
-        print(res_container_data_all)
         return res_container_data_all
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -52,8 +50,6 @@ def get_container_data():
 def get_network_data():
     try:
         res_network_data_all = json.loads(r.get('db_network'))
-        print("res_network_data_all")
-        print(res_network_data_all)
         return res_network_data_all
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -62,11 +58,6 @@ def get_network_data():
 def get_gpu_data():
     try:
         res_gpu_data_all = json.loads(r.get('db_gpu'))
-        print("res_gpu_data_all")
-        print(res_gpu_data_all)
-        res_gpu_data_current = res_gpu_data_all[0]
-        print("res_gpu_data_current")
-        print(res_gpu_data_current)
         return res_gpu_data_all
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
@@ -386,32 +377,24 @@ def gpu_to_pd():
     rows = []
     try:
         gpu_list = get_gpu_data()
-        print("gpu_list")
-        print(gpu_list)
         logging.info(f'[gpu_to_pd] gpu_list: {gpu_list}')  # Use logging.info instead of logging.exception
-        print("gpu_list 1")
         for entry in gpu_list:
-            print("gpu_list 2")
             gpu_info = ast.literal_eval(entry['gpu_info'])  # Parse the string into a dictionary
-            print("gpu_list 3")
             rows.append({                
                 "current_uuid": gpu_info.get("current_uuid", "0"),
                 "gpu_i": entry.get("gpu_i", "0"),
                 "gpu_util": gpu_info.get("gpu_util", "0"),
                 "mem_util": gpu_info.get("mem_util", "0"),
-                "supported": gpu_info.get("supported", "0"),
-                "not_supported": gpu_info.get("not_supported", "0"),
-                "mem_total": gpu_info.get("mem_total", "0"),
-                "mem_used": gpu_info.get("mem_used", "0"),
-                "mem_free": gpu_info.get("mem_free", "0"),
                 "temperature": gpu_info.get("temperature", "0"),
                 "fan_speed": gpu_info.get("fan_speed", "0"),
                 "power_usage": gpu_info.get("power_usage", "0"),
                 "clock_info_graphics": gpu_info.get("clock_info_graphics", "0"),
                 "clock_info_mem": gpu_info.get("clock_info_mem", "0"),
+                "timestamp": entry.get("timestamp", "0"),
                 "cuda_cores": gpu_info.get("cuda_cores", "0"),
                 "compute_capability": gpu_info.get("compute_capability", "0"),
-                "timestamp": entry.get("timestamp", "0"),
+                "supported": gpu_info.get("supported", "0"),
+                "not_supported": gpu_info.get("not_supported", "0"),
                 "status": "ok"
             })
 

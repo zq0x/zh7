@@ -415,8 +415,10 @@ def get_gpu_info():
                 # mem_util = f'{(mem_used / mem_total) * 100} %'
                 res_gpu_util = f'{utilization.gpu}%'
                 current_gpu_info['res_gpu_util'] = f'{res_gpu_util}'
-                res_mem_util = f'{utilization.memory}%'
-                current_gpu_info['res_mem_util'] = f'{res_mem_util}'
+                
+                
+                # res_mem_util = f'{utilization.memory}%'
+                # current_gpu_info['res_mem_util'] = f'{res_mem_util}'
             except Exception as e:
                 print(f'1 gpu_info {e}')
 
@@ -428,6 +430,10 @@ def get_gpu_info():
                 current_gpu_info['res_mem_used'] = f'{res_mem_used}'
                 res_mem_free = f'{mem_info.free / 1024 ** 2:.2f} MB'
                 current_gpu_info['res_mem_free'] = f'{res_mem_free}'
+                
+                res_mem_util = (float(mem_info.used / 1024**2)/float(mem_info.total / 1024**2)) * 100
+                current_gpu_info['res_mem_util'] = f'{"{:.2f}".format(res_mem_util)}% ({res_mem_used}/{res_mem_total})'
+
             except Exception as e:
                 print(f'2 gpu_info {e}')
             
