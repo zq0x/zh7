@@ -739,11 +739,11 @@ with gr.Blocks() as app:
     engine_args_close = gr.Button("Close Engine Arguments", scale=0, visible=False)
     
     engine_args.click(
-        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [engine_args,engine_args_close, max_model_len]
+        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [engine_args,engine_args_close, engine_arguments_row]
     )
     
     engine_args_close.click(
-        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [engine_args,engine_args_close, max_model_len]
+        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [engine_args,engine_args_close, engine_arguments_row]
     )
 
 
