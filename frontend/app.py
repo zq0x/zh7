@@ -729,12 +729,12 @@ with gr.Blocks() as app:
 
     with gr.Row():
         # max_model_len = gr.Number(label="max_model_len", value=2048, visible=True)
-        max_model_len = gr.Slider(1, 8096, value=2048, label="max_model_len", info="Choose between 2 and 20"),        
-        enforce_eager = gr.Checkbox(label="enforce_eager", info="Did they do it in the morning?"),       
+                
+        enforce_eager = gr.Checkbox(label="enforce_eager", info="Did they do it in the morning?")     
         tensor_parallel_size = gr.Number(label="tensor_parallel_size", value=1, visible=True)
         gpu_memory_utilization = gr.Textbox(label="gpu_memory_utilization", placeholder="0.87", value=0.87, visible=True)
 
-
+    max_model_len = gr.Slider(1, 8096, value=2048, label="max_model_len", info="Choose between 2 and 20"),
     engine_args = gr.Button("Show Engine Arguments", scale=0)
     engine_args_close = gr.Button("Close Engine Arguments", scale=0, visible=False)
     
