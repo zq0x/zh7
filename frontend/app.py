@@ -15,6 +15,7 @@ import gradio as gr
 import logging
 import psutil
 
+LOGFILE_CONTAINER = 'logfile_container_frontend.log'
 
 docker_container_list = []
 current_models_data = []
@@ -29,15 +30,23 @@ try:
 except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
 
-logging.basicConfig(filename='logfile_container_frontend.log', level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-def load_log_file(req_container,req_amount):
+def load_log_file():
     try:
-        with open(f'logfile_{req_container}.log', 'r') as file:
+        with open(LOGFILE_CONTAINER, 'r') as file:
             lines = file.readlines()
-            return ''.join(lines[-req_amount:])
+            return ''.join(lines)
     except Exception as e:
         return f'{e}'
+
+# def load_log_file(req_container,req_amount):
+#     try:
+#         with open(f'logfile_{req_container}.log', 'r') as file:
+#             lines = file.readlines()
+#             return ''.join(lines[-req_amount:])
+#     except Exception as e:
+#         return f'{e}'
 
 
 def get_container_data():
@@ -478,13 +487,58 @@ VLLM_URL = f'http://container_vllm:{os.getenv("VLLM_PORT")}/vllmt'
 
 # def vllm_api(request: gr.Request): 
 # def vllm_api(req_type,max_tokens=None,temperature=None,prompt_in=None):
+
+
 def vllm_api(
                 req_type,
                 model=None,
                 pipeline_tag=None,
                 max_model_len=None,
+                enforce_eager=None,
+                enable_prefix_caching=None,
+                pipeline_parallel_size=None,
                 tensor_parallel_size=None,
+                max_parallel_loading_workers=None,
+                kv_cache_dtype=None,
+                port=None,
+                swap_space=None,                
                 gpu_memory_utilization=None,
+                enable_chunked_prefill=None,
+                trust_remote_code=None,
+                load_format=None,
+                dtype=None,
+                quantization_param_path=None,
+                block_size=None,
+                num_lookahead_slots=None,
+                seed=None,
+                num_gpu_blocks_override=None,
+                max_num_batched_tokens=None,
+                max_num_seqs=None,
+                max_logprobs=None,
+                quantization=None,
+                max_content_len_to_capture=None,
+                tokenizer_pool_size=None,
+                tokenizer_pool_type=None,
+                tokenizer_pool_extra_config=None,
+                enable_lora=None,
+                max_loras=None,
+                max_lora_rank=None,
+                lora_extra_vocab_size=None,
+                lora_dtype=None,
+                max_cpu_loras=None,
+                device=None,
+                image_input_type=None,
+                image_token_id=None,
+                image_input_shape=None,
+                image_feature_size=None,
+                scheduler_delay_factor=None,
+                speculative_model=None,
+                num_speculative_tokens=None,
+                speculative_max_model_len=None,
+                model_loader_extra_config=None,
+                engine_use_ray=None,
+                disable_log_requests=None,
+                max_log_len=None,
                 top_p=None,
                 temperature=None,
                 max_tokens=None,
@@ -672,11 +726,47 @@ with gr.Blocks() as app:
 
 
 
-    
+
     with gr.Row():
-        max_model_len = gr.Number(label="max_model_len", value=2048, visible=True)
+        # max_model_len = gr.Number(label="max_model_len", value=2048, visible=True)
+        max_model_len = gr.Slider(1, 8096, value=2048, label="max_model_len", info="Choose between 2 and 20"),        
+        enforce_eager = gr.Checkbox(label="enforce_eager", info="Did they do it in the morning?"),       
         tensor_parallel_size = gr.Number(label="tensor_parallel_size", value=1, visible=True)
         gpu_memory_utilization = gr.Textbox(label="gpu_memory_utilization", placeholder="0.87", value=0.87, visible=True)
+
+
+    engine_args = gr.Button("Show Engine Arguments", scale=0)
+    engine_args_close = gr.Button("Close Engine Arguments", scale=0, visible=False)
+    
+    engine_args.click(
+        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [engine_args,engine_args_close, max_model_len]
+    )
+    
+    engine_args_close.click(
+        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [engine_args,engine_args_close, max_model_len]
+    )
+
+
+    
+    def sentence_builder(quantity, animal, countries, place, activity_list, morning):
+        return f"""The {quantity} {animal}s from {" and ".join(countries)} went to the {place} where they {" and ".join(activity_list)} until the {"morning" if morning else "night"}"""
+
+    demo = gr.Interface(
+        sentence_builder,
+        [
+            gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20"),
+            gr.Dropdown(
+                ["cat", "dog", "bird"], label="Animal", info="Will add more animals later!"
+            ),
+            gr.CheckboxGroup(["USA", "Japan", "Pakistan"], label="Countries", info="Where are they from?"),
+            gr.Radio(["park", "zoo", "road"], label="Location", info="Where did they go?"),
+            gr.Dropdown(
+                ["ran", "swam", "ate", "slept"], value=["swam", "slept"], multiselect=True, label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam nisl nunc vel nisl."
+            ),
+            gr.Checkbox(label="Morning", value=True, info="Did they do it in the morning?"),
+        ],
+        "text"
+    )
     
     
     load_btn = gr.Button("Load into vLLM (port: 1370)", visible=True)
@@ -685,7 +775,7 @@ with gr.Blocks() as app:
     
     with gr.Row():
         top_p = gr.Textbox(label="top_p", placeholder="0.95", value=0.95, visible=True)
-        temperature = gr.Textbox(label="temperature", placeholder="0.8", value=0.8, visible=True)
+        temperature = gr.Slider(0.1, 1.0, step=0.1, label="temperature", value=0.8, visible=True)
         max_tokens = gr.Number(label="max_tokens", value=150, visible=True)
     
     
@@ -713,12 +803,12 @@ with gr.Blocks() as app:
         docker_container_list = get_docker_container_list()
         print(f'found docker_container_list: {len(docker_container_list)}')
         all_container_names = [c["Name"] for c in docker_container_list]
-        print(f'found all_container_names: {len(all_container_names)}')
+        print(f'found all_container_names: {all_container_names}')
         
-        docker_container_list_sys = [c for c in docker_container_list if c["Name"] in ["container_redis","container_backend", "container_frontend"]]
+        docker_container_list_sys = [c for c in docker_container_list if c["Name"] in ["/container_redis","/container_backend", "/container_frontend"]]
         print(f'found docker_container_list_sys len: {len(docker_container_list_sys)}')
         
-        docker_container_list_no_sys = [c for c in docker_container_list if c["Name"] not in ["container_redis","container_backend", "container_frontend"]]        
+        docker_container_list_no_sys = [c for c in docker_container_list if c["Name"] not in ["/container_redis","/container_backend", "/container_frontend"]]        
         print(f'found docker_container_list_no_sys len: {len(docker_container_list_no_sys)}')
         
         docker_container_list_running = [c for c in docker_container_list_no_sys if c["State"]["Status"] == "running"]
@@ -748,8 +838,7 @@ with gr.Blocks() as app:
                 logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)     
                 
                 logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
+                    load_log_file,
                     outputs=[container_log_out]
                 ).then(
                     lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
@@ -808,8 +897,7 @@ with gr.Blocks() as app:
                 logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)
                 
                 logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
+                    load_log_file,
                     outputs=[container_log_out]
                 ).then(
                     lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
@@ -867,8 +955,7 @@ with gr.Blocks() as app:
                 logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)
                 
                 logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
+                    load_log_file,
                     outputs=[container_log_out]
                 ).then(
                     lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
