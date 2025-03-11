@@ -726,8 +726,8 @@ with gr.Blocks() as app:
 
 
 
+    with gr.Row(visible=True) as engine_arguments_row:
 
-    with gr.Row():
         # max_model_len = gr.Number(label="max_model_len", value=2048, visible=True)
                 
         enforce_eager = gr.Checkbox(label="enforce_eager", info="Did they do it in the morning?")     
