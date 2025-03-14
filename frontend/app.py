@@ -808,8 +808,8 @@ with gr.Blocks() as app:
         docker_container_list_sys = [c for c in docker_container_list if c["Name"] in ["/container_redis","/container_backend", "/container_frontend"]]
         print(f'found docker_container_list_sys len: {len(docker_container_list_sys)}')
         
-        docker_container_list_sys_running = [c for c in docker_container_list_no_sys if c["State"]["Status"] == "running"]
-        docker_container_list_sys_not_running = [c for c in docker_container_list_no_sys if c["State"]["Status"] != "running"]
+        docker_container_list_sys_running = [c for c in docker_container_list_sys if c["State"]["Status"] == "running"]
+        docker_container_list_sys_not_running = [c for c in docker_container_list_sys if c["State"]["Status"] != "running"]
 
 
         
