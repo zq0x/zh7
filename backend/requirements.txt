@@ -4,3 +4,4 @@ docker
 redis
 pynvml
 psutil
+torch

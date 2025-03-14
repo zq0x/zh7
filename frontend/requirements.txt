@@ -2,7 +2,6 @@ gradio
 transformers
 tokenizer
 pandas
-torch
 redis
 huggingface_hub
 psutil
