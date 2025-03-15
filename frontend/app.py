@@ -28,6 +28,7 @@ try:
 except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
 
+LOG_PATH= './logs'
 LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
 os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
 logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -37,7 +38,7 @@ def load_log_file(req_container_id):
     print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
     logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
     try:
-        with open(LOGFILE_CONTAINER, 'r') as file:
+        with open(f'{LOG_PATH}/logfile_{req_container_id}.log', 'r') as file:
             lines = file.readlines()
             return ''.join(lines)
     except Exception as e:
@@ -811,262 +812,269 @@ with gr.Blocks() as app:
             except Exception as e:
                 print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
                 return f'err {str(e)}'
-            
-        gr.Markdown(f'### System Container running ({len(docker_container_list_sys_running)})')
 
-        for current_container in docker_container_list_sys_running:
-            with gr.Row():
+
+        with gr.Accordion("System Container .........", open=False):
+            gr.Markdown(f'### System Container running ({len(docker_container_list_sys_running)})')
+
+            for current_container in docker_container_list_sys_running:
+                with gr.Row():
+                    
+                    container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container Id")
+                    
+                    container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
+        
+                    container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
+                    
+                    container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
+                    
+                with gr.Row():
+                    container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
+
+                with gr.Row():            
+                    btn_logs_file_open = gr.Button("Show Log File", scale=0)
+                    btn_logs_file_close = gr.Button("Close Log File", scale=0, visible=False)   
+                    btn_logs_docker_open = gr.Button("Show Docker Logs", scale=0)
+                    btn_logs_docker_close = gr.Button("Close Docker Logs", scale=0, visible=False)     
+                    
+                    
+                    
+                    btn_logs_file_open.click(
+                        load_log_file,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_file_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_open.click(
+                        docker_api_logs,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
+                    
+                gr.Markdown(
+                    """
+                    <hr>
+                    """
+                )
+
+
+            gr.Markdown(f'### System Container not running ({len(docker_container_list_sys_not_running)})')
+
+            for current_container in docker_container_list_sys_not_running:
+                with gr.Row():
+                    
+                    container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container ID")
+                    
+                    container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
+        
+                    container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
+                    
+                    container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
                 
-                container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container Id")
+                with gr.Row():
+                    container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
+                    
+                with gr.Row():
+                    btn_logs_file_open = gr.Button("Show Log File", scale=0)
+                    btn_logs_file_close = gr.Button("Close Log File", scale=0, visible=False)   
+                    btn_logs_docker_open = gr.Button("Show Docker Logs", scale=0)
+                    btn_logs_docker_close = gr.Button("Close Docker Logs", scale=0, visible=False)     
+                    
+                    
+                    
+                    btn_logs_file_open.click(
+                        load_log_file,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_file_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_open.click(
+                        docker_api_logs,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
                 
-                container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
+                gr.Markdown(
+                    """
+                    <hr>
+                    """
+                )
+
+
+
+
+
+
+
+
+
+
+
+        with gr.Accordion("vLLM Container .........", open=False):
+            gr.Markdown(f'### vLLM Container running ({len(docker_container_list_vllm_running)})')
+
+            for current_container in docker_container_list_vllm_running:
+                with gr.Row():
+                    
+                    container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container Id")
+                    
+                    container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
+        
+                    container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
+                    
+                    container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
+                    
+                with gr.Row():
+                    container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
+
+                with gr.Row():            
+                    btn_logs_file_open = gr.Button("Show Log File", scale=0)
+                    btn_logs_file_close = gr.Button("Close Log File", scale=0, visible=False)   
+                    btn_logs_docker_open = gr.Button("Show Docker Logs", scale=0)
+                    btn_logs_docker_close = gr.Button("Close Docker Logs", scale=0, visible=False)     
+                    
+                    
+                    
+                    btn_logs_file_open.click(
+                        load_log_file,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_file_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_open.click(
+                        docker_api_logs,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
+                    
+                    btn_logs_docker_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
+                    )
+                    
+                    stop_btn = gr.Button("Stop", scale=0)
+                    delete_btn = gr.Button("Delete", scale=0, variant="stop")
+
+                    stop_btn.click(
+                        docker_api_stop,
+                        inputs=[container_id],
+                        outputs=[container_state]
+                    ).then(
+                        refresh_container,
+                        outputs=[container_state]
+                    )
+
+                    delete_btn.click(
+                        docker_api_delete,
+                        inputs=[container_id],
+                        outputs=[container_state]
+                    ).then(
+                        refresh_container,
+                        outputs=[container_state]
+                    )
+                    
+                gr.Markdown(
+                    """
+                    <hr>
+                    """
+                )
+
+
+            gr.Markdown(f'### vLLM Container not running ({len(docker_container_list_vllm_not_running)})')
+
+            for current_container in docker_container_list_vllm_not_running:
+                with gr.Row():
+                    
+                    container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container ID")
+                    
+                    container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
+        
+                    container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
+                    
+                    container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
+                
+                with gr.Row():
+                    container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
+                    
+                with gr.Row():
+                    logs_btn = gr.Button("Show Logs", scale=0)
+                    logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)
+                    
+                    logs_btn.click(
+                        docker_api_logs,
+                        inputs=[container_id],
+                        outputs=[container_log_out]
+                    ).then(
+                        lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
+                    )
+                    
+                    logs_btn_close.click(
+                        lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [logs_btn,logs_btn_close, container_log_out]
+                    )
+                                    
+                    start_btn = gr.Button("Start", scale=0)
+                    delete_btn = gr.Button("Delete", scale=0, variant="stop")
+
+                    start_btn.click(
+                        docker_api_start,
+                        inputs=[container_id],
+                        outputs=[container_state]
+                    ).then(
+                        refresh_container,
+                        outputs=[container_state]
+                    )
+
+                    delete_btn.click(
+                        docker_api_delete,
+                        inputs=[container_id],
+                        outputs=[container_state]
+                    ).then(
+                        refresh_container,
+                        outputs=[container_state]
+                    )
+                
+                gr.Markdown(
+                    """
+                    <hr>
+                    """
+                )
+                
+        
+        
     
-                container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
-                
-                container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
-                
-            with gr.Row():
-                container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
-
-            with gr.Row():            
-                logs_btn = gr.Button("Show Logs", scale=0)
-                logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)     
-                
-                logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
-                    outputs=[container_log_out]
-                ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-                
-                logs_btn_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-
-                stop_btn = gr.Button("Stop", scale=0)
-                delete_btn = gr.Button("Delete", scale=0, variant="stop")
-
-                stop_btn.click(
-                    docker_api_stop,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-
-                delete_btn.click(
-                    docker_api_delete,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-                
-            gr.Markdown(
-                """
-                <hr>
-                """
-            )
-
-
-        gr.Markdown(f'### System Container not running ({len(docker_container_list_sys_not_running)})')
-
-        for current_container in docker_container_list_sys_not_running:
-            with gr.Row():
-                
-                container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container ID")
-                
-                container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
     
-                container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
-                
-                container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
-            
-            with gr.Row():
-                container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
-                
-            with gr.Row():
-                logs_btn = gr.Button("Show Logs", scale=0)
-                logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)
-                
-                logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
-                    outputs=[container_log_out]
-                ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-                
-                logs_btn_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-                                
-                start_btn = gr.Button("Start", scale=0)
-                delete_btn = gr.Button("Delete", scale=0, variant="stop")
-
-                start_btn.click(
-                    docker_api_start,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-
-                delete_btn.click(
-                    docker_api_delete,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-            
-            gr.Markdown(
-                """
-                <hr>
-                """
-            )
-            
-             
-        gr.Markdown(f'### vLLM Container running ({len(docker_container_list_vllm_running)})')
-
-        for current_container in docker_container_list_vllm_running:
-            with gr.Row():
-                
-                container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container Id")
-                
-                container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
     
-                container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
-                
-                container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
-                
-            with gr.Row():
-                container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
-
-            with gr.Row():            
-                btn_logs_file_open = gr.Button("Show Log File", scale=0)
-                btn_logs_file_close = gr.Button("Close Log File", scale=0, visible=False)   
-                btn_logs_docker_open = gr.Button("Show Docker Logs", scale=0)
-                btn_logs_docker_close = gr.Button("Close Docker Logs", scale=0, visible=False)     
-                
-                
-                
-                btn_logs_file_open.click(
-                    load_log_file,
-                    inputs=[container_id],
-                    outputs=[container_log_out]
-                ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
-                )
-                
-                btn_logs_file_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
-                )
-                
-                btn_logs_docker_open.click(
-                    docker_api_logs,
-                    inputs=[container_id],
-                    outputs=[container_log_out]
-                ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
-                )
-                
-                btn_logs_docker_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
-                )
-                
-                stop_btn = gr.Button("Stop", scale=0)
-                delete_btn = gr.Button("Delete", scale=0, variant="stop")
-
-                stop_btn.click(
-                    docker_api_stop,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-
-                delete_btn.click(
-                    docker_api_delete,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-                
-            gr.Markdown(
-                """
-                <hr>
-                """
-            )
-
-
-        gr.Markdown(f'### vLLM Container not running ({len(docker_container_list_vllm_not_running)})')
-
-        for current_container in docker_container_list_vllm_not_running:
-            with gr.Row():
-                
-                container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container ID")
-                
-                container_name = gr.Textbox(value=current_container["Name"][1:], interactive=False, elem_classes="table-cell", label="Container Name")              
-    
-                container_status = gr.Textbox(value=current_container["State"]["Status"], interactive=False, elem_classes="table-cell", label="Status")
-                
-                container_ports = gr.Textbox(value=next(iter(current_container["HostConfig"]["PortBindings"])), interactive=False, elem_classes="table-cell", label="Port")
-            
-            with gr.Row():
-                container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
-                
-            with gr.Row():
-                logs_btn = gr.Button("Show Logs", scale=0)
-                logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)
-                
-                logs_btn.click(
-                    docker_api_logs,
-                    inputs=[container_id],
-                    outputs=[container_log_out]
-                ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-                
-                logs_btn_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [logs_btn,logs_btn_close, container_log_out]
-                )
-                                
-                start_btn = gr.Button("Start", scale=0)
-                delete_btn = gr.Button("Delete", scale=0, variant="stop")
-
-                start_btn.click(
-                    docker_api_start,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-
-                delete_btn.click(
-                    docker_api_delete,
-                    inputs=[container_id],
-                    outputs=[container_state]
-                ).then(
-                    refresh_container,
-                    outputs=[container_state]
-                )
-            
-            gr.Markdown(
-                """
-                <hr>
-                """
-            )
-            
     def refresh_container_list():
         try:
             global docker_container_list

@@ -19,6 +19,7 @@ services:
     volumes:
       - ./backend:/usr/src/app
       - /var/run/docker.sock:/var/run/docker.sock
+      - ../logs:/usr/src/app/logs
       - /models:/models
     depends_on:
       - redis
@@ -45,7 +46,7 @@ services:
       - "1370:1370"
     container_name: container_vllm
     volumes:
-      - ./vllm/logs:/var/log
+      - ../logs:/var/log
       - /models:/models
     shm_size: 8gb
     environment:
