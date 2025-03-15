@@ -34,11 +34,11 @@ os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
 logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-def load_log_file(req_container_id):
-    print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
-    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
+def load_log_file(req_container_name):
+    print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
+    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
     try:
-        with open(f'{LOG_PATH}/logfile_{req_container_id}.log', 'r') as file:
+        with open(f'{LOG_PATH}/logfile_{req_container_name}.log', 'r') as file:
             lines = file.readlines()
             return ''.join(lines)
     except Exception as e:
@@ -814,8 +814,8 @@ with gr.Blocks() as app:
                 return f'err {str(e)}'
 
 
-        with gr.Accordion("System Container .........", open=False):
-            gr.Markdown(f'### System Container running ({len(docker_container_list_sys_running)})')
+        with gr.Accordion("System Container", open=False):
+            gr.Markdown(f'### Running ({len(docker_container_list_sys_running)})')
 
             for current_container in docker_container_list_sys_running:
                 with gr.Row():
@@ -841,7 +841,7 @@ with gr.Blocks() as app:
                     
                     btn_logs_file_open.click(
                         load_log_file,
-                        inputs=[container_id],
+                        inputs=[container_name],
                         outputs=[container_log_out]
                     ).then(
                         lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
@@ -870,7 +870,7 @@ with gr.Blocks() as app:
                 )
 
 
-            gr.Markdown(f'### System Container not running ({len(docker_container_list_sys_not_running)})')
+            gr.Markdown(f'### Not Running ({len(docker_container_list_sys_not_running)})')
 
             for current_container in docker_container_list_sys_not_running:
                 with gr.Row():
@@ -896,7 +896,7 @@ with gr.Blocks() as app:
                     
                     btn_logs_file_open.click(
                         load_log_file,
-                        inputs=[container_id],
+                        inputs=[container_name],
                         outputs=[container_log_out]
                     ).then(
                         lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
@@ -934,8 +934,8 @@ with gr.Blocks() as app:
 
 
 
-        with gr.Accordion("vLLM Container .........", open=False):
-            gr.Markdown(f'### vLLM Container running ({len(docker_container_list_vllm_running)})')
+        with gr.Accordion("vLLM Container", open=False):
+            gr.Markdown(f'### Running ({len(docker_container_list_vllm_running)})')
 
             for current_container in docker_container_list_vllm_running:
                 with gr.Row():
@@ -961,7 +961,7 @@ with gr.Blocks() as app:
                     
                     btn_logs_file_open.click(
                         load_log_file,
-                        inputs=[container_id],
+                        inputs=[container_name],
                         outputs=[container_log_out]
                     ).then(
                         lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
@@ -1011,7 +1011,7 @@ with gr.Blocks() as app:
                 )
 
 
-            gr.Markdown(f'### vLLM Container not running ({len(docker_container_list_vllm_not_running)})')
+            gr.Markdown(f'### Not running ({len(docker_container_list_vllm_not_running)})')
 
             for current_container in docker_container_list_vllm_not_running:
                 with gr.Row():
