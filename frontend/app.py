@@ -15,8 +15,6 @@ import gradio as gr
 import logging
 import psutil
 
-LOGFILE_CONTAINER = 'logfile_container_frontend.log'
-
 docker_container_list = []
 current_models_data = []
 db_gpu_data = []
@@ -31,7 +29,9 @@ except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
 
 LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
+os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
 logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 def load_log_file(req_container_id):
     print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
