@@ -30,23 +30,18 @@ try:
 except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
 
+LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
 logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-def load_log_file():
+def load_log_file(req_container_id):
+    print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
+    logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_id}')
     try:
         with open(LOGFILE_CONTAINER, 'r') as file:
             lines = file.readlines()
             return ''.join(lines)
     except Exception as e:
         return f'{e}'
-
-# def load_log_file(req_container,req_amount):
-#     try:
-#         with open(f'logfile_{req_container}.log', 'r') as file:
-#             lines = file.readlines()
-#             return ''.join(lines[-req_amount:])
-#     except Exception as e:
-#         return f'{e}'
 
 
 def get_container_data():
@@ -954,21 +949,37 @@ with gr.Blocks() as app:
                 container_log_out = gr.Textbox(value=[], lines=20, interactive=False, elem_classes="table-cell", show_label=False, visible=False)
 
             with gr.Row():            
-                logs_btn = gr.Button("Show Logs", scale=0)
-                logs_btn_close = gr.Button("Close Logs", scale=0, visible=False)     
+                btn_logs_file_open = gr.Button("Show Log File", scale=0)
+                btn_logs_file_close = gr.Button("Close Log File", scale=0, visible=False)   
+                btn_logs_docker_open = gr.Button("Show Docker Logs", scale=0)
+                btn_logs_docker_close = gr.Button("Close Docker Logs", scale=0, visible=False)     
                 
-                logs_btn.click(
+                
+                
+                btn_logs_file_open.click(
+                    load_log_file,
+                    inputs=[container_id],
+                    outputs=[container_log_out]
+                ).then(
+                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                )
+                
+                btn_logs_file_close.click(
+                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_file_open,btn_logs_file_close, container_log_out]
+                )
+                
+                btn_logs_docker_open.click(
                     docker_api_logs,
                     inputs=[container_id],
                     outputs=[container_log_out]
                 ).then(
-                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [logs_btn,logs_btn_close, container_log_out]
+                    lambda :[gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
                 )
                 
-                logs_btn_close.click(
-                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [logs_btn,logs_btn_close, container_log_out]
+                btn_logs_docker_close.click(
+                    lambda :[gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], None, [btn_logs_docker_open,btn_logs_docker_close, container_log_out]
                 )
-
+                
                 stop_btn = gr.Button("Stop", scale=0)
                 delete_btn = gr.Button("Delete", scale=0, variant="stop")
 
