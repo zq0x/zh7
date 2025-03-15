@@ -801,8 +801,10 @@ with gr.Blocks() as app:
     @gr.render(inputs=container_state)
     def render_container(render_container_list):
         docker_container_list = get_docker_container_list()
-        docker_container_list_running = [c for c in docker_container_list if c["State"]["Status"] == "running"]
-        docker_container_list_not_running = [c for c in docker_container_list if c["State"]["Status"] != "running"]
+        docker_container_list_sys_running = [c for c in docker_container_list if c["State"]["Status"] == "running" and c["Name"] in ["/container_redis","/container_backend", "/container_frontend"]]
+        docker_container_list_vllm_running = [c for c in docker_container_list if c["State"]["Status"] == "running" and c["Name"] not in ["/container_redis","/container_backend", "/container_frontend"]]
+        docker_container_list_sys_not_running = [c for c in docker_container_list if c["State"]["Status"] != "running" and c["Name"] in ["/container_redis","/container_backend", "/container_frontend"]]
+        docker_container_list_vllm_not_running = [c for c in docker_container_list if c["State"]["Status"] != "running" and c["Name"] in ["/container_redis","/container_backend", "/container_frontend"]]
 
         def refresh_container():
             try:
@@ -815,9 +817,9 @@ with gr.Blocks() as app:
                 print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
                 return f'err {str(e)}'
             
-        gr.Markdown(f'### Container running ({len(docker_container_list_running)})')
+        gr.Markdown(f'### System Container running ({len(docker_container_list_sys_running)})')
 
-        for current_container in docker_container_list_running:
+        for current_container in docker_container_list_sys_running:
             with gr.Row():
                 
                 container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container Id")
@@ -875,9 +877,9 @@ with gr.Blocks() as app:
             )
 
 
-        gr.Markdown(f'### Container not running ({len(docker_container_list_not_running)})')
+        gr.Markdown(f'### System Container not running ({len(docker_container_list_sys_not_running)})')
 
-        for current_container in docker_container_list_not_running:
+        for current_container in docker_container_list_sys_not_running:
             with gr.Row():
                 
                 container_id = gr.Textbox(value=current_container["Id"][:12], interactive=False, elem_classes="table-cell", label="Container ID")
