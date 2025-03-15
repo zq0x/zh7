@@ -471,7 +471,8 @@ def get_download_speed():
         download_speed_mbit_s = (download_speed * 8) / (1024 ** 2)      
         bytes_received_mb = bytes_recv
         rx_change_arr.append(rx_change_arr)
-        return f'{download_speed_mbit_s:.2f} MBit/s (total: {bytes_received_mb})'
+        # return f'{download_speed_mbit_s:.2f} MBit/s (total: {bytes_received_mb})'
+        return f'{download_speed} bytes ({download_speed_mbit_s:.2f} MBit/s)'
         # return f'{download_speed_kb:.2f} KB/s (total: {bytes_received_mb:.2f})'
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
