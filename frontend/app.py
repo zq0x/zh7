@@ -781,7 +781,8 @@ def create_app():
                 # vllm_engine_arguments_show = gr.Button("GENERATE NEW VLLM", variant="primary")
                 # vllm_engine_arguments_close = gr.Button("CANCEL")
                 model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, row_model_info).then(gr_load_check, [selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated],[info_textbox,btn_dl])
- 
+
+                create_response = gr.Textbox(label="Building container...", show_label=True, visible=False)  
                 btn_interface = gr.Button("Load Interface",visible=False)
                 @gr.render(inputs=[selected_model_pipeline_tag, selected_model_id], triggers=[btn_interface.click])
                 def show_split(text_pipeline, text_model):
@@ -794,10 +795,10 @@ def create_app():
 
 
                         
-                btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, output).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, output).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, output).then(lambda: gr.update(visible=True), None, btn_interface)
+                btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
                 
-                btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, output).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=output).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, btn_interface)
+                btn_deploy.click(lambda: gr.update(label="Building vLLM container",visible=True), None, create_response).then(docker_api_create,inputs=[model_dropdown,selected_model_pipeline_tag,port_model,port_vllm],outputs=create_response).then(refresh_container, outputs=[container_state]).then(lambda: gr.Timer(active=True), None, timer_dl).then(lambda: gr.update(visible=True), None, btn_interface)
 
 
         
