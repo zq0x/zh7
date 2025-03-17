@@ -14,6 +14,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 import pynvml
 import psutil
+import logging
 
 
 
@@ -122,6 +123,11 @@ FALLBACK_CONTAINER_STATS = {
 
 # print(f'** connecting to redis on port: {os.getenv("REDIS_PORT")} ... ')
 r = redis.Redis(host="redis", port=int(os.getenv("REDIS_PORT", 6379)), db=0)
+
+LOG_PATH= './logs'
+LOGFILE_CONTAINER = f'{LOG_PATH}/logfile_container_frontend.log'
+os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
+logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # print(f'** connecting to pynvml ... ')
 pynvml.nvmlInit()
@@ -330,6 +336,7 @@ def get_network_info():
         return network_info
     except Exception as e:
         print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
+        logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [get_network_info] {e}')
         return network_info
 
 
@@ -377,6 +384,7 @@ async def redis_timer_network():
             await asyncio.sleep(1.0)
         except Exception as e:
             print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] Error: {e}')
+            logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [redis_timer_network] {e}')
             await asyncio.sleep(1.0)
 
 
@@ -705,23 +713,23 @@ async def docker_rest(request: Request):
                 # res_container_list = client.containers.list(all=True)
                 # return JSONResponse([container.attrs for container in res_container_list])
                 
-                print(f'mhmmhmhmh')
-                vllm_containers_running = [c for c in container_list if c.name.startswith("vllm") and c.status == "running"]
-                print(f'found total vLLM running containers: {len(vllm_containers_running)}')
-                while len(vllm_containers_running) > 0:
-                    print(f'stopping all vLLM containers...')
-                    for vllm_container in vllm_containers_running:
-                        print(f'stopping container {vllm_container.name}...')
-                        vllm_container.stop()
-                        vllm_container.wait()
-                    print(f'waiting for containers to stop...')
-                    time.sleep(2)
-                    vllm_containers_running = [c for c in container_list if c.name.startswith("vllm") and c.status == "running"]
-                print(f'all vLLM containers stopped successfully') 
+                # print(f'mhmmhmhmh')
+                # vllm_containers_running = [c for c in container_list if c.name.startswith("vllm") and c.status == "running"]
+                # print(f'found total vLLM running containers: {len(vllm_containers_running)}')
+                # while len(vllm_containers_running) > 0:
+                #     print(f'stopping all vLLM containers...')
+                #     for vllm_container in vllm_containers_running:
+                #         print(f'stopping container {vllm_container.name}...')
+                #         vllm_container.stop()
+                #         vllm_container.wait()
+                #     print(f'waiting for containers to stop...')
+                #     time.sleep(2)
+                #     vllm_containers_running = [c for c in container_list if c.name.startswith("vllm") and c.status == "running"]
+                # print(f'all vLLM containers stopped successfully') 
                                 
                 res_container = client.containers.run(
                     "vllm/vllm-openai:latest",
-                    command=f'--model {req_data["req_model"]} --tensor-parallel-size 2',
+                    command=f'--model {req_data["req_model"]} --tensor-parallel-size 1',
                     name=container_name,
                     runtime=req_data["req_runtime"],
                     volumes={"/home/cloud/.cache/huggingface": {"bind": "/root/.cache/huggingface", "mode": "rw"}},

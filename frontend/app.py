@@ -14,6 +14,8 @@ import redis
 import gradio as gr
 import logging
 import psutil
+from dataclasses import dataclass, fields
+
 
 docker_container_list = []
 current_models_data = []
@@ -29,16 +31,72 @@ except Exception as e:
     print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
 
 LOG_PATH= './logs'
-LOGFILE_CONTAINER = './logs/logfile_container_frontend.log'
+LOGFILE_CONTAINER = f'{LOG_PATH}/logfile_container_frontend.log'
 os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
-logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
+
+
+@dataclass
+class InputComponents:
+    param1: gr.Slider
+    param2: gr.Number
+    quantity: gr.Slider
+    animal: gr.Dropdown
+    countries: gr.CheckboxGroup
+    place: gr.Radio
+    activity_list: gr.Dropdown
+    morning: gr.Checkbox
+    param0: gr.Textbox
+    
+    def to_list(self) -> list:
+        return [getattr(self, f.name) for f in fields(self)]
+
+
+@dataclass
+class InputValues:
+    
+    param1: int
+    param2: int
+    quantity: int
+    animal: str
+    countries: list
+    place: str
+    activity_list: list
+    morning: bool
+    param0: str
+
+
+
+def predict_with_my_model(*params):
+    req_params = InputValues(*params)
+    result = f"Processed values: {req_params.param1}, {req_params.param2}, {req_params.quantity}, {req_params.animal}, {req_params.countries}, {req_params.place}, {req_params.activity_list}, {req_params.morning}, {req_params.param0}, {req_params.param0}, {req_params.param0}, {req_params.param0}"
+    return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def load_log_file(req_container_name):
     print(f' **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
     logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] **************** GOT LOG FILE REQUEST FOR CONTAINER ID: {req_container_name}')
     try:
-        with open(f'{LOG_PATH}/logfile_{req_container_name}.log', 'r') as file:
+        with open(f'.{LOG_PATH}/logfile_{req_container_name}.log', 'r') as file:
             lines = file.readlines()
             return ''.join(lines)
     except Exception as e:
@@ -332,9 +390,7 @@ def network_to_pd():
             
             rows.append({
                 "container": entry["container"],
-                "current_dl": entry["current_dl"],
-                "timestamp": entry["timestamp"],
-                "info": entry["info"]
+                "current_dl": entry["current_dl"]
             })
             
             
@@ -673,23 +729,91 @@ with gr.Blocks() as app:
 
     model_dropdown = gr.Dropdown(choices=[''], interactive=True, show_label=False, visible=False)
 
-    with gr.Row():
-        selected_model_id = gr.Textbox(label="id",visible=False)
-        selected_model_container_name = gr.Textbox(label="container_name",visible=False)
-        
-    with gr.Row():       
-        selected_model_pipeline_tag = gr.Textbox(label="pipeline_tag", visible=False)
-        selected_model_transformers = gr.Textbox(label="transformers", visible=False)
-        selected_model_private = gr.Textbox(label="private", visible=False)
-        
-    with gr.Row():
-        selected_model_size = gr.Textbox(label="size", visible=False)
-        selected_model_gated = gr.Textbox(label="gated", visible=False)
-        selected_model_downloads = gr.Textbox(label="downloads", visible=False)
+
+    def toggle_components(vllm_list):
+        create_selected = "Create New" in vllm_list
+        if create_selected:
+            return (
+                gr.Textbox(visible=True),
+                gr.Button(visible=True)
+            )
+        else:
+            return (
+                gr.Textbox(visible=False),
+                gr.Button(visible=False)
+            )
+    vllms=gr.Radio(["vLLM1", "vLLM2", "Create New"], label="vLLMs", info="Where to deploy?")
+
     
-    selected_model_search_data = gr.Textbox(label="search_data", visible=True)
-    selected_model_hf_data = gr.Textbox(label="hf_data", visible=True)
-    selected_model_config_data = gr.Textbox(label="config_data", visible=True)
+    textbox = gr.Textbox(
+        label="Additional Information for Japan",
+        visible=False,
+        placeholder="Enter additional information about Japan..."
+    )
+
+    with gr.Row(visible=False) as vllm_engine_arguments_row:
+        with gr.Column(scale=4):
+            with gr.Accordion(("Advanced Parameters"), open=True):
+                input_components = InputComponents(
+                    param0=gr.Textbox(placeholder="pasdsssda", value="genau", label="Textbox", info="yes a textbox"),
+                    param1=gr.Slider(2, 20, value=1, label="Count", info="Choose between 2 and 20"),
+                    param2=gr.Number(label="Number Input", value="2", info="Enter a number"),
+                    quantity=gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20"),
+                    animal=gr.Dropdown(["cat", "dog", "bird"], label="Animal", info="Will add more animals later!"),
+                    countries=gr.CheckboxGroup(["USA", "Japan", "Pakistan"], label="Countries", info="Where are they from?"),
+                    place=gr.Radio(["park", "zoo", "road"], label="Location", info="Where did they go?"),
+                    activity_list=gr.Dropdown(["ran", "swam", "ate", "slept"], value=["swam", "slept"], multiselect=True, label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam nisl nunc vel nisl."),
+                    morning=gr.Checkbox(label="Morning", value=True, info="Did they do it in the morning?")
+                )
+        with gr.Column(scale=1, visible=False) as vllm_engine_arguments_btn:
+            vllm_engine_arguments_show = gr.Button("GENERATE NEW VLLM", variant="primary")
+            vllm_engine_arguments_close = gr.Button("CANCEL")
+            btn_vllm_engine_arguments = gr.Button("SEND DOCKER")
+            output = gr.Textbox(label="Output")
+
+
+            btn_vllm_engine_arguments.click(
+                predict_with_my_model,
+                input_components.to_list(),
+                [output]
+            )
+
+        vllm_engine_arguments_show.click(
+            lambda: [gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)], 
+            None, 
+            [vllm_engine_arguments_show, vllm_engine_arguments_close, vllm_engine_arguments_row]
+        )
+        
+        vllm_engine_arguments_close.click(
+            lambda: [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)], 
+            None, 
+            [vllm_engine_arguments_show, vllm_engine_arguments_close, vllm_engine_arguments_row]
+        )
+
+    
+    
+    
+    with gr.Row(visible=False) as row_models_info:
+        with gr.Accordion(("Advanced Parameters"), open=True):
+            with gr.Row():
+                selected_model_id = gr.Textbox(label="id")
+                selected_model_container_name = gr.Textbox(label="container_name")
+                
+            with gr.Row():       
+                selected_model_pipeline_tag = gr.Textbox(label="pipeline_tag")
+                selected_model_transformers = gr.Textbox(label="transformers")
+                selected_model_private = gr.Textbox(label="private")
+                
+            with gr.Row():
+                selected_model_size = gr.Textbox(label="size")
+                selected_model_gated = gr.Textbox(label="gated")
+                selected_model_downloads = gr.Textbox(label="downloads")
+                
+            with gr.Row():
+                selected_model_search_data = gr.Textbox(label="search_data")
+                selected_model_hf_data = gr.Textbox(label="hf_data")
+                selected_model_config_data = gr.Textbox(label="config_data")
+    
     gr.Markdown(
         """
         <hr>
@@ -707,9 +831,29 @@ with gr.Blocks() as app:
     btn_dl = gr.Button("Download", visible=True)
     btn_deploy = gr.Button("Deploy", visible=True)
     
-    model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, selected_model_pipeline_tag).then(lambda: gr.update(visible=True), None, selected_model_transformers).then(lambda: gr.update(visible=True), None, selected_model_private).then(lambda: gr.update(visible=True), None, selected_model_downloads).then(lambda: gr.update(visible=True), None, selected_model_size).then(lambda: gr.update(visible=True), None, selected_model_gated).then(lambda: gr.update(visible=True), None, port_model).then(lambda current_value: current_value + 1, port_model, port_model).then(lambda: gr.update(visible=True), None, port_vllm).then(lambda current_value: current_value + 1, port_vllm, port_vllm).then(gr_load_check, [selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated],[info_textbox,btn_dl])
+    model_dropdown.change(get_info, model_dropdown, [selected_model_search_data,selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_downloads,selected_model_container_name]).then(get_additional_info, model_dropdown, [selected_model_hf_data, selected_model_config_data, selected_model_id, selected_model_size, selected_model_gated]).then(lambda: gr.update(visible=True), None, row_models_info).then(lambda: gr.update(visible=True), None, port_model).then(lambda current_value: current_value + 1, port_model, port_model).then(lambda: gr.update(visible=True), None, port_vllm).then(lambda current_value: current_value + 1, port_vllm, port_vllm).then(gr_load_check, [selected_model_id,selected_model_pipeline_tag,selected_model_transformers,selected_model_private,selected_model_gated],[info_textbox,btn_dl])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     create_response = gr.Textbox(label="Building container...", show_label=True, visible=False)  
+    
+    
+    
     
     btn_interface = gr.Button("Load Interface",visible=False)
     @gr.render(inputs=[selected_model_pipeline_tag, selected_model_id], triggers=[btn_interface.click])
@@ -745,25 +889,25 @@ with gr.Blocks() as app:
 
 
     
-    def sentence_builder(quantity, animal, countries, place, activity_list, morning):
-        return f"""The {quantity} {animal}s from {" and ".join(countries)} went to the {place} where they {" and ".join(activity_list)} until the {"morning" if morning else "night"}"""
+    # def sentence_builder(quantity, animal, countries, place, activity_list, morning):
+    #     return f"""The {quantity} {animal}s from {" and ".join(countries)} went to the {place} where they {" and ".join(activity_list)} until the {"morning" if morning else "night"}"""
 
-    demo = gr.Interface(
-        sentence_builder,
-        [
-            gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20"),
-            gr.Dropdown(
-                ["cat", "dog", "bird"], label="Animal", info="Will add more animals later!"
-            ),
-            gr.CheckboxGroup(["USA", "Japan", "Pakistan"], label="Countries", info="Where are they from?"),
-            gr.Radio(["park", "zoo", "road"], label="Location", info="Where did they go?"),
-            gr.Dropdown(
-                ["ran", "swam", "ate", "slept"], value=["swam", "slept"], multiselect=True, label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam nisl nunc vel nisl."
-            ),
-            gr.Checkbox(label="Morning", value=True, info="Did they do it in the morning?"),
-        ],
-        "text"
-    )
+    # demo = gr.Interface(
+    #     sentence_builder,
+    #     [
+    #         gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20"),
+    #         gr.Dropdown(
+    #             ["cat", "dog", "bird"], label="Animal", info="Will add more animals later!"
+    #         ),
+    #         gr.CheckboxGroup(["USA", "Japan", "Pakistan"], label="Countries", info="Where are they from?"),
+    #         gr.Radio(["park", "zoo", "road"], label="Location", info="Where did they go?"),
+    #         gr.Dropdown(
+    #             ["ran", "swam", "ate", "slept"], value=["swam", "slept"], multiselect=True, label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam nisl nunc vel nisl."
+    #         ),
+    #         gr.Checkbox(label="Morning", value=True, info="Did they do it in the morning?"),
+    #     ],
+    #     "text"
+    # )
     
     
     load_btn = gr.Button("Load into vLLM (port: 1370)", visible=True)
