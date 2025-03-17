@@ -125,14 +125,15 @@ FALLBACK_CONTAINER_STATS = {
 r = redis.Redis(host="redis", port=int(os.getenv("REDIS_PORT", 6379)), db=0)
 
 LOG_PATH= './logs'
-LOGFILE_CONTAINER = f'{LOG_PATH}/logfile_container_frontend.log'
+LOGFILE_CONTAINER = f'{LOG_PATH}/logfile_container_backend.log'
 os.makedirs(os.path.dirname(LOGFILE_CONTAINER), exist_ok=True)
 logging.basicConfig(filename=LOGFILE_CONTAINER, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
+logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [START] started logging in {LOGFILE_CONTAINER}')
 # print(f'** connecting to pynvml ... ')
 pynvml.nvmlInit()
 device_count = pynvml.nvmlDeviceGetCount()
 # print(f'** pynvml found GPU: {device_count}')
+logging.info(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] [START] pynvml found GPU: {device_count}')
 
 device_uuids = []
 for i in range(0,device_count):
