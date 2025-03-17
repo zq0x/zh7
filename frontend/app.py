@@ -793,7 +793,12 @@ def create_app():
                         print(f'selected_model_id_arr {selected_model_id_arr}...')            
                         gr.Interface.from_pipeline(pipeline(text_pipeline, model=f'/models/{selected_model_id_arr[0]}/{selected_model_id_arr[1]}'))
 
-
+                timer_dl = gr.Timer(1,active=False)
+                timer_dl.tick(get_download_speed, outputs=output)    
+                
+                
+                timer_c = gr.Timer(1,active=False)
+                timer_c.tick(refresh_container)
                         
                 btn_dl.click(lambda: gr.update(label="Starting download ...",visible=True), None, create_response).then(lambda: gr.Timer(active=True), None, timer_dl).then(download_from_hf_hub, model_dropdown, create_response).then(lambda: gr.Timer(active=False), None, timer_dl).then(lambda: gr.update(label="Download finished!"), None, create_response).then(lambda: gr.update(visible=True), None, btn_interface)
 
@@ -1289,12 +1294,7 @@ def create_app():
                 print(f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {e}')
                 return f'err {str(e)}'
 
-        timer_dl = gr.Timer(1,active=False)
-        timer_dl.tick(get_download_speed, outputs=output)    
-        
-        
-        timer_c = gr.Timer(1,active=False)
-        timer_c.tick(refresh_container)
+
 
 
 
